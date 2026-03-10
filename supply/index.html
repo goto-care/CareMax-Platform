@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>備品管理 | CareMax Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- Auth script removed dependency -->
+</head>
+
+<body>
+    <!-- App Container -->
+    <div id="app" class="app-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="nav-sidebar">
+            <a href="../index.html" class="logo-section">
+                <div class="logo-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <span class="logo-text">備品管理</span>
+            </a>
+
+            <div class="nav-menu">
+                <span class="nav-label">Category</span>
+                <div class="nav-item active" onclick="setCategoryFilter('')" id="nav-all">
+                    <i class="fa-solid fa-grid-2"></i> 全ての備品
+                </div>
+                <div class="nav-item" onclick="setCategoryFilter('事務用品')" id="nav-office">
+                    <i class="fa-solid fa-pen-nib"></i> 事務用品
+                </div>
+                <div class="nav-item" onclick="setCategoryFilter('清掃・衛生')" id="nav-cleaning">
+                    <i class="fa-solid fa-sparkles"></i> 清掃・衛生
+                </div>
+                <div class="nav-item" onclick="setCategoryFilter('飲食')" id="nav-food">
+                    <i class="fa-solid fa-mug-hot"></i> 飲食
+                </div>
+                <div class="nav-item" onclick="setCategoryFilter('その他')" id="nav-other">
+                    <i class="fa-solid fa-box-archive"></i> その他
+                </div>
+
+                <div style="margin-top: 32px;"></div>
+                <span class="nav-label">Menu</span>
+                <div class="nav-item" onclick="toggleHistory()">
+                    <i class="fa-solid fa-clock-rotate-left"></i> 注文履歴
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div>
+                    <h1 class="page-title">Inventory</h1>
+                    <p style="color:var(--text-muted); font-size: 0.9rem;">必要な備品を選択してください</p>
+                </div>
+                <div class="top-actions">
+                    <div class="view-switcher">
+                        <button onclick="setViewMode('list')" class="view-btn" id="view-list-btn" title="リスト表示"><i
+                                class="fa-solid fa-list"></i></button>
+                        <button onclick="setViewMode('small')" class="view-btn" id="view-small-btn" title="小サイズ"><i
+                                class="fa-solid fa-table-cells-large"></i></button>
+                        <button onclick="setViewMode('medium')" class="view-btn active" id="view-medium-btn"
+                            title="標準表示"><i class="fa-solid fa-table-cells"></i></button>
+                        <button onclick="setViewMode('large')" class="view-btn" id="view-large-btn" title="詳細表示"><i
+                                class="fa-solid fa-tablet-screen-button"></i></button>
+                    </div>
+                    <div class="search-container">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="備品を検索...">
+                    </div>
+                    <button class="primary-button" onclick="openItemModal()">
+                        <i class="fa-solid fa-plus"></i> 新規登録
+                    </button>
+                </div>
+            </header>
+
+            <div class="inventory-container">
+                <div id="inventory-grid" class="inventory-grid"></div>
+            </div>
+        </main>
+
+        <!-- Cart Sidebar -->
+        <aside class="cart-sidebar">
+            <div class="cart-header">
+                <h2 class="cart-title">
+                    <i class="fa-solid fa-inbox" style="color:var(--accent-primary)"></i>
+                    申請リスト
+                </h2>
+            </div>
+            <div id="requests-list" class="cart-items">
+                <!-- Cart items here -->
+            </div>
+            <div class="cart-footer">
+                <button id="send-btn" class="primary-button" onclick="sendRequests()" disabled>
+                    申請を確定
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content large-modal">
+            <div class="modal-header">
+                <h2>注文履歴</h2>
+                <button class="close-modal-btn" onclick="toggleHistory()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>備品名</th>
+                            <th>カテゴリー</th>
+                            <th>申請日</th>
+                            <th>完了日</th>
+                            <th>備考</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Add/Edit Modal -->
+    <div id="item-modal" class="modal hidden">
+        <div class="modal-content standard-modal">
+            <div class="modal-header">
+                <h2 id="item-modal-title">備品を登録</h2>
+                <button class="close-modal-btn" onclick="closeItemModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>備品名</label>
+                    <input type="text" id="item-name-input" placeholder="例: ボールペン">
+                </div>
+                <div class="form-group">
+                    <label>カテゴリー</label>
+                    <select id="item-category-select">
+                        <option value="事務用品">事務用品</option>
+                        <option value="清掃・衛生">清掃・衛生</option>
+                        <option value="飲食">飲食</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                <!-- Image URL option hidden for simplicity as requested, keeping logic just in case or add back if needed currently hidden in UI logic but here -->
+                <div class="form-group hidden">
+                    <label>画像URL</label>
+                    <input type="text" id="item-image-url-input">
+                </div>
+            </div>
+            <div class="modal-footer footer-spread">
+                <button id="modal-delete-btn" class="delete-link-btn hidden" onclick="deleteItemFromModal()">
+                    <i class="fa-solid fa-trash"></i> 削除
+                </button>
+                <div class="footer-actions">
+                    <button class="cancel-btn" onclick="closeItemModal()">キャンセル</button>
+                    <button class="save-btn" onclick="saveItem()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Modal -->
+    <div id="request-modal" class="modal hidden">
+        <div class="modal-content standard-modal">
+            <div class="modal-header">
+                <h2>申請詳細</h2>
+                <button class="close-modal-btn" onclick="closeRequestModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p id="request-item-name" class="modal-subtitle"></p>
+                <div class="form-group">
+                    <label>備考</label>
+                    <textarea id="request-comment-input" rows="3" placeholder="例: 数量・色・サイズなど"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" onclick="closeRequestModal()">キャンセル</button>
+                <button class="save-btn" onclick="confirmRequest()">カートに追加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal Removed -->
+
+    <div id="toast-container"></div>
+
+    <!-- Firebase SDKs via compat mode for non-module support -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

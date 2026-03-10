@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareMax Management Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --accent-primary: #4285f4;
+            --accent-secondary: #34a853;
+            --accent-warning: #fbbc04;
+            --accent-danger: #ea4335;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .login-container {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .logo-large {
+            font-size: 3rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .logo-large i {
+            background: linear-gradient(135deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            color: #333;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: 0.3s;
+        }
+
+        .google-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .google-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .google-btn img {
+            width: 24px;
+            height: 24px;
+        }
+
+        .user-info {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 50px;
+            color: white;
+        }
+
+        .user-info.show {
+            display: inline-flex;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-left: 12px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            max-width: 95%;
+            /* Changed to percentage to fill wide screens */
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .app-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 40px 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .app-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .app-icon.supply {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+        }
+
+        .app-icon.catalog {
+            background: linear-gradient(135deg, #10b981, #14b8a6);
+        }
+
+        .app-icon.jijogu {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .app-icon.tasking {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+
+        .app-icon.kaientai-x {
+            background: linear-gradient(135deg, #ff0080, #ff8c00);
+        }
+
+        .app-icon.kaientai-s {
+            background: linear-gradient(135deg, #1f1f1f, #5a5a5a);
+        }
+
+        .app-icon.kaientai-m {
+            background: linear-gradient(135deg, #1e40af, #0f172a);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.4);
+        }
+
+        .app-icon.kaientai-m svg {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .app-icon.kaientai-p {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.4);
+        }
+
+        .app-icon.kaientai-p svg {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .app-icon.kaientai-d {
+            background: linear-gradient(135deg, #ec4899, #be185d);
+            box-shadow: 0 8px 32px rgba(236, 72, 153, 0.4);
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .app-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .app-icon {
+            position: relative;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #ff3b30;
+            /* iPhone system red */
+            color: white;
+            border-radius: 50%;
+            min-width: 24px;
+            height: 24px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            border: 2.5px solid white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }
+
+        .notification-badge.hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-container">
+        <h1 class="logo-large"><i class="fa-solid fa-cubes"></i> CareMax Platform</h1>
+        <p class="tagline">業務管理を、もっとスマートに。</p>
+
+        <div id="loading" class="loading">読み込み中...</div>
+
+        <button id="google-login-btn" class="google-btn hidden" onclick="signInWithGoogle()"
+            style="margin-bottom: 24px;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+            Googleアカウントでログイン
+        </button>
+
+        <div id="demo-login-btn" class="hidden" style="margin-top: 10px;">
+            <button class="google-btn" onclick="signInDemo()" style="background: #f1f5f9; color: #475569;">
+                <i class="fa-solid fa-user-gear"></i> デモユーザーで試用する
+            </button>
+        </div>
+
+        <div id="user-info" class="user-info">
+            <div class="user-avatar" id="user-avatar">G</div>
+            <span id="user-name">ゲストユーザー</span>
+            <button class="logout-btn" onclick="signOutUser()">ログアウト</button>
+        </div>
+    </div>
+
+    <div id="apps-grid" class="apps-grid hidden">
+        <a href="supply/index.html" class="app-card">
+            <div class="app-icon supply">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span id="supply-badge" class="notification-badge hidden">0</span>
+            </div>
+            <h2 class="app-title">備品管理</h2>
+            <p class="app-desc">オフィス備品の発注依頼と在庫管理を効率的に行えます。</p>
+        </a>
+
+        <a href="catalog/index.html" class="app-card">
+            <div class="app-icon catalog"><i class="fa-solid fa-chart-line"></i></div>
+            <h2 class="app-title">カタログ収支管理</h2>
+            <p class="app-desc">収入・支出を記録し、収支バランスを可視化します。</p>
+        </a>
+
+        <a href="jijogu/index.html" class="app-card">
+            <div class="app-icon jijogu">
+                <i class="fa-solid fa-wheelchair"></i>
+                <span id="jijogu-badge" class="notification-badge hidden">0</span>
+            </div>
+            <h2 class="app-title">自助具管理</h2>
+            <p class="app-desc">貸出機器のトラッキングと返却管理を一元化します。</p>
+        </a>
+
+        <a href="https://tasking-caremax.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon tasking">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h2 class="app-title">タスク王</h2>
+            <p class="app-desc">日々のタスクをゲーム感覚で管理し、生産性を向上させます。</p>
+        </a>
+
+        <a href="https://kaientai-x.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-x">
+                <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <h2 class="app-title">Kaientai-X</h2>
+            <p class="app-desc">最新の展示会情報とイノベーションを体験できるプラットフォームです。</p>
+        </a>
+
+        <a href="https://scrape-kaientai-s.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-s">
+                <i class="fa-solid fa-user-secret"></i>
+            </div>
+            <h2 class="app-title">Kaientai-S</h2>
+            <p class="app-desc">セキュアなデータ解析と情報の深掘りをサポートするツールスイートです。</p>
+        </a>
+
+        <a href="https://kaientai-m-defence.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-m">
+                <!-- Modern Aegis Geometric Shield SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="48" height="48" fill="white">
+                    <!-- Angular Shield Silhouette -->
+                    <path d="M256 0 L462 80 L462 260 C 462 420 256 512 256 512 C 256 512 50 420 50 260 L 50 80 Z" />
+                    <!-- Geometric Accent Lines -->
+                    <path d="M256 60 L412 110 L412 250 C 412 360 256 440 256 440 C 256 440 100 360 100 250 L 100 110 Z"
+                        fill="#1e40af" />
+                    <path d="M256 100 L362 140 L362 240 C 362 310 256 380 256 380 C 256 380 150 310 150 240 L 150 140 Z"
+                        fill="white" opacity="0.9" />
+                    <!-- Central Vertical Divide -->
+                    <rect x="254" y="100" width="4" height="280" fill="#0f172a" opacity="0.2" />
+                </svg>
+            </div>
+            <h2 class="app-title">Kaientai-M</h2>
+            <p class="app-desc">自社ブランドを守り、競争優位性を確保する守りのマーケティングプラットフォームです。</p>
+        </a>
+
+        <a href="https://kaientai-p.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-p">
+                <!-- Isometric Simulation SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="52" height="52" fill="white">
+                    <path d="M256 48 L80 144 V336 L256 432 L432 336 V144 Z" fill="none" stroke="white" stroke-width="24"
+                        stroke-linejoin="round" opacity="0.6" />
+                    <path d="M80 144 L256 240 L432 144 M256 240 V432" fill="none" stroke="white" stroke-width="24"
+                        stroke-linejoin="round" opacity="0.6" />
+                    <!-- Layer 1 -->
+                    <polygon points="256 96 360 156 256 216 152 156" fill="white" opacity="0.9" />
+                    <!-- Layer 2 -->
+                    <polygon points="256 264 360 324 256 384 152 324" fill="white" opacity="0.3" />
+                </svg>
+            </div>
+            <h2 class="app-title">Kaientai-P</h2>
+            <p class="app-desc">高度なシミュレーション機能で、未来の戦略を精緻にモデリング・予測します。</p>
+        </a>
+
+        <a href="https://daiwari-caremax.netlify.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-d">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h2 class="app-title">Kaientai-D</h2>
+            <p class="app-desc">製品情報の閲覧と検索をスムーズに行えるデジタルカタログ・プラットフォームです。</p>
+        </a>
+    </div>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDFoI20EpiXp6VV8N0SyJdmkEcK2_cZLLA",
+            authDomain: "kikakubu-portal.firebaseapp.com",
+            projectId: "kikakubu-portal",
+            storageBucket: "kikakubu-portal.firebasestorage.app",
+            messagingSenderId: "165113957756",
+            appId: "1:165113957756:web:1043443ba7c3b32395a8f9"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        const db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn(e));
+
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            const loading = document.getElementById('loading');
+            if (loading) loading.classList.add('hidden');
+
+            if (user) {
+                showLoggedInState(user);
+            } else {
+                // Check for demo user
+                const localUser = localStorage.getItem('caremax-user');
+                if (localUser) {
+                    try {
+                        const parsed = JSON.parse(localUser);
+                        if (parsed.isDemo) {
+                            showLoggedInState(parsed);
+                            return;
+                        }
+                    } catch (e) { }
+                }
+                showLoggedOutState();
+            }
+        });
+
+        function signInWithGoogle() {
+            const btn = document.getElementById('google-login-btn');
+            const demoBtn = document.getElementById('demo-login-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ログイン中...';
+            if (demoBtn) demoBtn.classList.add('hidden');
+
+            // Set persistence to LOCAL (default, but explicit is safer)
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => {
+                    return auth.signInWithPopup(provider);
+                })
+                .then((result) => {
+                    console.log('Signed in:', result.user.displayName);
+                    // Auth state listener will handle the UI update
+                })
+                .catch((error) => {
+                    console.error('Sign in error:', error);
+                    alert('ログインに失敗しました: ' + error.message);
+                    resetLoginButton();
+                });
+        }
+
+        function signInDemo() {
+            const demoUser = {
+                uid: 'demo-user-' + Date.now(),
+                displayName: 'デモ管理者',
+                email: 'demo@caremax.local',
+                photoURL: null,
+                isDemo: true
+            };
+            showLoggedInState(demoUser);
+        }
+
+        function signOutUser() {
+            const userJson = localStorage.getItem('caremax-user');
+            if (userJson) {
+                const user = JSON.parse(userJson);
+                if (user.isDemo) {
+                    showLoggedOutState();
+                    return;
+                }
+            }
+
+            auth.signOut()
+                .then(() => {
+                    // console.log('Signed out');
+                })
+                .catch((error) => {
+                    console.error('Sign out error:', error);
+                    showLoggedOutState();
+                });
+        }
+
+        function resetLoginButton() {
+            const btn = document.getElementById('google-login-btn');
+            const demoBtn = document.getElementById('demo-login-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Googleアカウントでログイン';
+                btn.classList.remove('hidden');
+            }
+            if (demoBtn) {
+                demoBtn.classList.remove('hidden');
+            }
+        }
+
+        function showLoggedInState(user) {
+            document.getElementById('google-login-btn')?.classList.add('hidden');
+            document.getElementById('demo-login-btn')?.classList.add('hidden');
+            document.getElementById('user-info')?.classList.add('show');
+            document.getElementById('apps-grid')?.classList.remove('hidden');
+
+            const nameEl = document.getElementById('user-name');
+            if (nameEl) nameEl.textContent = user.displayName || user.email;
+
+            const avatarEl = document.getElementById('user-avatar');
+            if (avatarEl) {
+                if (user.photoURL) {
+                    avatarEl.innerHTML = `<img src="${user.photoURL}" alt="avatar">`;
+                } else {
+                    avatarEl.textContent = (user.displayName || user.email || 'U').charAt(0).toUpperCase();
+                }
+            }
+
+            // Store user info for other apps
+            localStorage.setItem('caremax-user', JSON.stringify({
+                uid: user.uid,
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+                isDemo: user.isDemo || false
+            }));
+
+            // Update notification badges
+            updateNotificationBadges();
+        }
+
+        function showLoggedOutState() {
+            resetLoginButton();
+            document.getElementById('user-info')?.classList.remove('show');
+            document.getElementById('apps-grid')?.classList.add('hidden');
+
+            // Hide badges when logged out
+            document.getElementById('supply-badge')?.classList.add('hidden');
+            document.getElementById('jijogu-badge')?.classList.add('hidden');
+
+            localStorage.removeItem('caremax-user');
+        }
+
+        function updateNotificationBadges() {
+            // Initialize Firestore if not already done (need to check if initialized? handled by firebase.initializeApp)
+            const db = firebase.firestore();
+
+            // Supply Badge - Listen to realtime updates
+            db.collection('requests').where('status', '==', 'Pending')
+                .onSnapshot((snapshot) => {
+                    const count = snapshot.size;
+                    const supplyBadge = document.getElementById('supply-badge');
+                    if (supplyBadge) {
+                        if (count > 0) {
+                            supplyBadge.textContent = count;
+                            supplyBadge.classList.remove('hidden');
+                        } else {
+                            supplyBadge.classList.add('hidden');
+                        }
+                    }
+                }, (error) => {
+                    console.error("Error getting badge count:", error);
+                });
+
+            // Jijogu Badge - Keep as is (localStorage) or update? User only asked for supply badge.
+            // Keeping existing logic for Jijogu safely wrapped
+            try {
+                const jijoguData = localStorage.getItem('caremax-jijogu');
+                if (jijoguData) {
+                    const records = JSON.parse(jijoguData);
+                    const today = new Date().toISOString().split('T')[0];
+                    const todayShipCount = records.filter(r => r.shipDate === today).length;
+                    const jijoguBadge = document.getElementById('jijogu-badge');
+                    if (jijoguBadge) {
+                        if (todayShipCount > 0) {
+                            jijoguBadge.textContent = todayShipCount;
+                            jijoguBadge.classList.remove('hidden');
+                        } else {
+                            jijoguBadge.classList.add('hidden');
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Jijogu badge error:', e); }
+        }
+
+
+    </script>
+</body>
+
+</html>
