@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ja">
 
 <head>
@@ -290,218 +290,12 @@
         .notification-badge.hidden {
             display: none !important;
         }
-
-        /* === Easter Egg: Kaientai A-Z Checker === */
-        .az-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .az-overlay.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-
-        .az-modal {
-            background: linear-gradient(145deg, #0f172a, #1e293b);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 36px;
-            max-width: 720px;
-            width: 90%;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
-            transform: scale(0.9) translateY(20px);
-            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .az-overlay.active .az-modal {
-            transform: scale(1) translateY(0);
-        }
-
-        .az-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-
-        .az-header h2 {
-            color: #e2e8f0;
-            font-size: 1.3rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .az-header h2 i {
-            color: #818cf8;
-        }
-
-        .az-close {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: #94a3b8;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-        }
-
-        .az-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .az-stats {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .az-stat {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 12px 18px;
-            flex: 1;
-            text-align: center;
-        }
-
-        .az-stat .num {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #818cf8;
-        }
-
-        .az-stat .label {
-            font-size: 0.75rem;
-            color: #64748b;
-            margin-top: 2px;
-        }
-
-        .az-progress-bar {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 3px;
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .az-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #818cf8, #6366f1);
-            border-radius: 3px;
-            transition: width 0.6s ease;
-        }
-
-        .az-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-        }
-
-        .az-panel {
-            aspect-ratio: 1;
-            border-radius: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .az-panel.released {
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            cursor: default;
-        }
-
-        .az-panel.released:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .az-panel.empty {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px dashed rgba(255, 255, 255, 0.1);
-        }
-
-        .az-panel .letter {
-            font-size: 1.5rem;
-            font-weight: 800;
-        }
-
-        .az-panel.released .letter {
-            color: white;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .az-panel.empty .letter {
-            color: rgba(255, 255, 255, 0.15);
-            font-size: 2rem;
-        }
-
-        .az-panel .app-name {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.95);
-            font-weight: 700;
-            text-align: center;
-            line-height: 1.2;
-        }
-
-        .az-panel .az-icon {
-            font-size: 1.4rem;
-            color: white;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .az-panel .az-icon svg {
-            width: 28px;
-            height: 28px;
-        }
-
-        .az-panel .question {
-            font-size: 1.6rem;
-            color: rgba(255, 255, 255, 0.1);
-        }
-
-        #platform-logo {
-            cursor: pointer;
-            user-select: none;
-            -webkit-user-select: none;
-        }
     </style>
 </head>
 
 <body>
     <div class="login-container">
-        <h1 class="logo-large" id="platform-logo"><i class="fa-solid fa-cubes"></i> CareMax Platform</h1>
+        <h1 class="logo-large"><i class="fa-solid fa-cubes"></i> CareMax Platform</h1>
         <p class="tagline">業務管理を、もっとスマートに。</p>
 
         <div id="loading" class="loading">読み込み中...</div>
@@ -526,7 +320,7 @@
     </div>
 
     <div id="apps-grid" class="apps-grid hidden">
-        <a href="supply/index.html" class="app-card">
+        <a class='app-card' href='/supply/'>
             <div class="app-icon supply">
                 <i class="fa-solid fa-boxes-stacked"></i>
                 <span id="supply-badge" class="notification-badge hidden">0</span>
@@ -535,13 +329,13 @@
             <p class="app-desc">オフィス備品の発注依頼と在庫管理を効率的に行えます。</p>
         </a>
 
-        <a href="catalog/index.html" class="app-card">
+        <a class='app-card' href='/catalog/'>
             <div class="app-icon catalog"><i class="fa-solid fa-chart-line"></i></div>
             <h2 class="app-title">カタログ収支管理</h2>
             <p class="app-desc">収入・支出を記録し、収支バランスを可視化します。</p>
         </a>
 
-        <a href="jijogu/index.html" class="app-card">
+        <a class='app-card' href='/jijogu/'>
             <div class="app-icon jijogu">
                 <i class="fa-solid fa-wheelchair"></i>
                 <span id="jijogu-badge" class="notification-badge hidden">0</span>
@@ -618,34 +412,6 @@
             <h2 class="app-title">Kaientai-D</h2>
             <p class="app-desc">製品情報の閲覧と検索をスムーズに行えるデジタルカタログ・プラットフォームです。</p>
         </a>
-    </div>
-
-    <!-- Easter Egg: Kaientai A-Z Checker Modal -->
-    <div class="az-overlay" id="az-overlay">
-        <div class="az-modal">
-            <div class="az-header">
-                <h2><i class="fa-solid fa-flask"></i> Kaientai A-Z Progress</h2>
-                <button class="az-close" id="az-close"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="az-stats">
-                <div class="az-stat">
-                    <div class="num" id="az-released-count">0</div>
-                    <div class="label">RELEASED</div>
-                </div>
-                <div class="az-stat">
-                    <div class="num" id="az-remaining-count">26</div>
-                    <div class="label">REMAINING</div>
-                </div>
-                <div class="az-stat">
-                    <div class="num" id="az-progress-pct">0%</div>
-                    <div class="label">PROGRESS</div>
-                </div>
-            </div>
-            <div class="az-progress-bar">
-                <div class="az-progress-fill" id="az-progress-fill" style="width: 0%"></div>
-            </div>
-            <div class="az-grid" id="az-grid"></div>
-        </div>
     </div>
 
     <!-- Firebase SDK (Compat) -->
@@ -848,127 +614,6 @@
             } catch (e) { console.warn('Jijogu badge error:', e); }
         }
 
-        // === Easter Egg: Kaientai A-Z Alphabet Checker ===
-        (function () {
-            const CLICK_THRESHOLD = 5;
-            const CLICK_WINDOW = 1200; // ms
-            let clickTimestamps = [];
-
-            const logo = document.getElementById('platform-logo');
-            const overlay = document.getElementById('az-overlay');
-            const closeBtn = document.getElementById('az-close');
-
-            if (logo && overlay) {
-                logo.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const now = Date.now();
-                    clickTimestamps.push(now);
-                    // Keep only timestamps within the window
-                    clickTimestamps = clickTimestamps.filter(t => now - t < CLICK_WINDOW);
-                    if (clickTimestamps.length >= CLICK_THRESHOLD) {
-                        clickTimestamps = [];
-                        openAZChecker();
-                    }
-                });
-
-                // Close handlers
-                closeBtn.addEventListener('click', closeAZChecker);
-                overlay.addEventListener('click', function (e) {
-                    if (e.target === overlay) closeAZChecker();
-                });
-                document.addEventListener('keydown', function (e) {
-                    if (e.key === 'Escape' && overlay.classList.contains('active')) {
-                        closeAZChecker();
-                    }
-                });
-            }
-
-            function openAZChecker() {
-                buildAZGrid();
-                overlay.classList.add('active');
-            }
-
-            function closeAZChecker() {
-                overlay.classList.remove('active');
-            }
-
-            // Color map for released apps
-            const colorMap = {
-                'D': 'linear-gradient(135deg, #ec4899, #be185d)',
-                'M': 'linear-gradient(135deg, #1e40af, #0f172a)',
-                'P': 'linear-gradient(135deg, #06b6d4, #2563eb)',
-                'S': 'linear-gradient(135deg, #1f1f1f, #5a5a5a)',
-                'X': 'linear-gradient(135deg, #ff0080, #ff8c00)'
-            };
-
-            function buildAZGrid() {
-                const grid = document.getElementById('az-grid');
-                grid.innerHTML = '';
-
-                // Scan DOM for Kaientai apps
-                const releasedMap = {};
-                const titles = document.querySelectorAll('.app-title');
-                titles.forEach(el => {
-                    const text = el.textContent.trim();
-                    const match = text.match(/^Kaientai-([A-Z])$/i);
-                    if (match) {
-                        const letter = match[1].toUpperCase();
-                        // Get the icon HTML from the sibling .app-icon element
-                        const card = el.closest('.app-card');
-                        let iconHTML = '';
-                        if (card) {
-                            const iconEl = card.querySelector('.app-icon');
-                            if (iconEl) {
-                                // Clone the icon content (Font Awesome <i> or <svg>)
-                                const svgEl = iconEl.querySelector('svg');
-                                const faEl = iconEl.querySelector('i.fa-solid, i.fas, i.fab');
-                                if (svgEl) {
-                                    iconHTML = svgEl.outerHTML;
-                                } else if (faEl) {
-                                    iconHTML = faEl.outerHTML;
-                                }
-                            }
-                        }
-                        releasedMap[letter] = { name: text, icon: iconHTML };
-                    }
-                });
-
-                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                const releasedCount = Object.keys(releasedMap).length;
-                const remainingCount = 26 - releasedCount;
-                const pct = Math.round((releasedCount / 26) * 100);
-
-                document.getElementById('az-released-count').textContent = releasedCount;
-                document.getElementById('az-remaining-count').textContent = remainingCount;
-                document.getElementById('az-progress-pct').textContent = pct + '%';
-                document.getElementById('az-progress-fill').style.width = pct + '%';
-
-                for (const ch of alphabet) {
-                    const panel = document.createElement('div');
-                    panel.className = 'az-panel';
-
-                    if (releasedMap[ch]) {
-                        panel.classList.add('released');
-                        const bg = colorMap[ch] || 'linear-gradient(135deg, #6366f1, #a855f7)';
-                        panel.style.background = bg;
-                        const iconPart = releasedMap[ch].icon
-                            ? `<span class="az-icon">${releasedMap[ch].icon}</span>`
-                            : `<span class="letter">${ch}</span>`;
-                        panel.innerHTML = `
-                            ${iconPart}
-                            <span class="app-name">${releasedMap[ch].name}</span>
-                        `;
-                    } else {
-                        panel.classList.add('empty');
-                        panel.innerHTML = `
-                            <span class="question">?</span>
-                            <span class="letter">${ch}</span>
-                        `;
-                    }
-                    grid.appendChild(panel);
-                }
-            }
-        })();
 
     </script>
 </body>
