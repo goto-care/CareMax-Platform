@@ -37,6 +37,12 @@ const state = {
 
 let editingId = null;
 
+function stripNotifyEmail(record) {
+    if (!record || typeof record !== 'object') return record;
+    const { notifyEmail, ...rest } = record;
+    return rest;
+}
+
 // Debounce helper
 let renderTimeout;
 function debounceRender() {
@@ -51,12 +57,10 @@ function init() {
         db.collection('jijogu_records').onSnapshot(snapshot => {
             state.records = [];
             snapshot.forEach(doc => {
-                state.records.push({ id: doc.id, ...doc.data() });
+                state.records.push(stripNotifyEmail({ id: doc.id, ...doc.data() }));
             });
             // Persist remote changes to local storage for offline robustness
             localStorage.setItem('caremax-jijogu', JSON.stringify(state.records));
-
-            checkShipDateNotifications();
             debounceRender();
         }, error => {
             console.error("Error fetching jijogu records:", error);
@@ -70,8 +74,7 @@ function init() {
 function loadLocalData() {
     const saved = localStorage.getItem('caremax-jijogu');
     if (saved) {
-        state.records = JSON.parse(saved);
-        checkShipDateNotifications();
+        state.records = JSON.parse(saved).map(stripNotifyEmail);
         debounceRender();
     }
 }
@@ -79,26 +82,25 @@ function loadLocalData() {
 // Sync Helper
 // Sync Helper (Optimistic Update)
 async function syncRecord(action, data) {
-    // 1. Optimistic Local Update
+    const payload = action === 'save' ? stripNotifyEmail(data) : data;
+
     if (action === 'save') {
-        const idx = state.records.findIndex(r => r.id === data.id);
-        if (idx > -1) state.records[idx] = data;
-        else state.records.push(data);
+        const idx = state.records.findIndex(r => r.id === payload.id);
+        if (idx > -1) state.records[idx] = payload;
+        else state.records.push(payload);
     } else if (action === 'delete') {
-        state.records = state.records.filter(r => r.id !== data);
+        state.records = state.records.filter(r => r.id !== payload);
     }
 
-    // 2. Persist to LocalStorage & Render immediately
     localStorage.setItem('caremax-jijogu', JSON.stringify(state.records));
     debounceRender();
 
-    // 3. Background Sync to Firebase
     if (db) {
         try {
             if (action === 'save') {
-                await db.collection('jijogu_records').doc(String(data.id)).set(data);
+                await db.collection('jijogu_records').doc(String(payload.id)).set(payload);
             } else if (action === 'delete') {
-                await db.collection('jijogu_records').doc(String(data)).delete();
+                await db.collection('jijogu_records').doc(String(payload)).delete();
             }
         } catch (e) {
             console.error("Background Sync error:", e);
@@ -149,7 +151,6 @@ function openModal(id = null) {
             document.getElementById('f-return-date').value = record.returnDate || '';
             document.getElementById('f-last-check').value = record.lastCheck || '';
             document.getElementById('f-notes').value = record.notes || '';
-            document.getElementById('f-notify-email').value = record.notifyEmail || '';
             deleteBtn.classList.remove('hidden');
         }
     } else {
@@ -170,7 +171,6 @@ function openModal(id = null) {
         document.getElementById('f-return-date').value = '';
         document.getElementById('f-last-check').value = '';
         document.getElementById('f-notes').value = '';
-        document.getElementById('f-notify-email').value = '';
         deleteBtn.classList.add('hidden');
     }
 
@@ -183,14 +183,6 @@ function closeModal() {
 }
 
 function saveRecord() {
-    const notifyEmail = document.getElementById('f-notify-email').value.trim();
-
-    // Gmail validation
-    if (notifyEmail && !notifyEmail.match(/^[a-zA-Z0-9._%+-]+@gmail\.com$/i)) {
-        alert('送付アドレスはGmailアドレス（@gmail.com）のみ対応しています');
-        return;
-    }
-
     const data = {
         customerCode: document.getElementById('f-customer-code').value.trim(),
         customerName: document.getElementById('f-customer-name').value.trim(),
@@ -204,8 +196,7 @@ function saveRecord() {
         expectedReturn: document.getElementById('f-expected-return').value,
         returnDate: document.getElementById('f-return-date').value,
         lastCheck: document.getElementById('f-last-check').value,
-        notes: document.getElementById('f-notes').value.trim(),
-        notifyEmail: notifyEmail
+        notes: document.getElementById('f-notes').value.trim()
     };
 
     if (!data.customerCode || !data.customerName) {
@@ -214,12 +205,10 @@ function saveRecord() {
     }
 
     if (editingId) {
-        // Update existing
-        const existing = state.records.find(r => r.id === editingId);
-        const updated = { ...existing, ...data };
+        const existing = state.records.find(r => r.id === editingId) || {};
+        const updated = stripNotifyEmail({ ...existing, ...data });
         syncRecord('save', updated);
     } else {
-        // Create new
         const maxNo = state.records.reduce((max, r) => Math.max(max, r.managementNo || 0), 0);
         const newItem = {
             id: Date.now(),
@@ -302,79 +291,17 @@ function render() {
     });
 }
 
-// Check for today's ship date and show notification
-function checkShipDateNotifications() {
-    const today = new Date().toISOString().split('T')[0];
-    const todayRecords = state.records.filter(r => r.shipDate === today && r.notifyEmail);
-
-    if (todayRecords.length > 0) {
-        // Create notification element if not exists
-        let notifEl = document.querySelector('.ship-notification');
-        if (!notifEl) {
-            notifEl = document.createElement('div');
-            notifEl.className = 'ship-notification';
-            document.body.appendChild(notifEl);
-        }
-
-        notifEl.innerHTML = `
-            <i class="fa-solid fa-truck" style="font-size: 1.5rem;"></i>
-            <div>
-                <strong>本日発送予定: ${todayRecords.length}件</strong><br>
-                <small>通知メールを送信しますか？</small>
-            </div>
-            <button onclick="sendShipNotifications()">送信</button>
-            <button onclick="dismissNotification()" style="background:#f1f5f9; color:#64748b;">後で</button>
-        `;
-        notifEl.classList.remove('hidden');
-    }
-}
-
-function sendShipNotifications() {
-    const today = new Date().toISOString().split('T')[0];
-    const todayRecords = state.records.filter(r => r.shipDate === today && r.notifyEmail);
-
-    if (todayRecords.length === 0) {
-        alert('本日発送予定のレコードはありません');
-        return;
-    }
-
-    // Build mailto link for all notifications
-    todayRecords.forEach(record => {
-        const subject = encodeURIComponent(`【自助具発送通知】${record.customerName}様 セット${record.setName}`);
-        const body = encodeURIComponent(
-            `${record.customerName}様\n\n` +
-            `本日、自助具セット（${record.setName}）を発送いたしました。\n\n` +
-            `得意先コード: ${record.customerCode}\n` +
-            `発送日: ${record.shipDate}\n` +
-            `返却予定日: ${record.expectedReturn || '未定'}\n\n` +
-            `ご不明点がございましたらお気軽にお問い合わせください。`
-        );
-
-        window.open(`mailto:${record.notifyEmail}?subject=${subject}&body=${body}`, '_blank');
-    });
-
-    dismissNotification();
-    alert(`${todayRecords.length}件の通知メールを準備しました`);
-}
-
-function dismissNotification() {
-    const notifEl = document.querySelector('.ship-notification');
-    if (notifEl) {
-        notifEl.classList.add('hidden');
-    }
-}
-
 // Export CSV
 // Export CSV
 function exportCSV() {
-    const headers = ['得意先コード', '得意先名', '状況', 'セット名', '対応担当', '営業担当', '依頼日', '使用日', '発送日', '返却予定日', '返却日', '最終チェック日', '備考', '送付アドレス'];
+    const headers = ['得意先コード', '得意先名', '状況', 'セット名', '対応担当', '営業担当', '依頼日', '使用日', '発送日', '返却予定日', '返却日', '最終チェック日', '備考'];
     let csv = '\ufeff' + headers.join(',') + '\n';
 
     const escapeCSV = (field) => {
         if (field === null || field === undefined) return '';
         const str = String(field);
         if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-            return `"${str.replace(/"/g, '""')}"`;
+            return '"' + str.replace(/"/g, '""') + '"';
         }
         return str;
     };
@@ -393,8 +320,7 @@ function exportCSV() {
             escapeCSV(r.expectedReturn),
             escapeCSV(r.returnDate),
             escapeCSV(r.lastCheck),
-            escapeCSV(r.notes),
-            escapeCSV(r.notifyEmail)
+            escapeCSV(r.notes)
         ];
         csv += row.join(',') + '\n';
     });
@@ -402,7 +328,8 @@ function exportCSV() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `jijogu_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `jijogu_${new Date().toISOString().split('T')[0]}`;
+    link.download += '.csv';
     link.click();
 }
 
@@ -415,8 +342,6 @@ window.closeModal = closeModal;
 window.saveRecord = saveRecord;
 window.deleteRecord = deleteRecord;
 window.exportCSV = exportCSV;
-window.sendShipNotifications = sendShipNotifications;
-window.dismissNotification = dismissNotification;
 
 // Start Init safely
 // Start

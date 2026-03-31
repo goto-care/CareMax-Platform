@@ -55,6 +55,9 @@ const itemModalTitle = document.getElementById('item-modal-title');
 const itemNameInput = document.getElementById('item-name-input');
 const itemCategorySelect = document.getElementById('item-category-select');
 const itemImageUrlInput = document.getElementById('item-image-url-input');
+const itemImageFileInput = document.getElementById('item-image-file-input');
+const itemImagePreview = document.getElementById('item-image-preview');
+const itemImagePickerBtn = document.getElementById('item-image-picker-btn');
 const modalDeleteBtn = document.getElementById('modal-delete-btn');
 const settingsModal = document.getElementById('settings-modal');
 const adminEmailInput = document.getElementById('admin-email-input');
@@ -69,11 +72,15 @@ let pendingRequestItemId = null;
 let sortableInstance = null; // SortableJS Instance
 
 const CATEGORY_ORDER = {
-    '事務用品': 1,
-    '清掃・衛生': 2,
-    '飲食': 3,
-    'その他': 4
+    '\u4e8b\u52d9\u7528\u54c1': 1,
+    '\u6e05\u6383\u30fb\u885b\u751f': 2,
+    '\u98f2\u98df': 3,
+    '\u305d\u306e\u4ed6': 4
 };
+
+const IMAGE_MAX_DIMENSION = 640;
+const IMAGE_OUTPUT_QUALITY = 0.82;
+const IMAGE_MAX_DATA_URL_LENGTH = 380000;
 
 // --- INIT ---
 
@@ -224,6 +231,186 @@ function getPictogram(name) {
     return 'fa-box-archive';
 }
 
+function getItemImagePlaceholderMarkup() {
+    return `
+        <div class="item-modal-image-empty">
+            <i class="fa-regular fa-image"></i>
+            <span>\u753b\u50cf\u3092\u307e\u3060\u767b\u9332\u3057\u3066\u3044\u307e\u305b\u3093</span>
+            <small>\u30af\u30ea\u30c3\u30af\u3057\u3066\u753b\u50cf\u3092\u9078\u629e\u3067\u304d\u307e\u3059</small>
+        </div>
+    `;
+}
+
+function renderItemImagePreview(imageUrl = '', itemName = '') {
+    if (!itemImagePreview) return;
+
+    if (imageUrl) {
+        itemImagePreview.classList.remove('item-modal-image-placeholder');
+        itemImagePreview.innerHTML = '<img src="' + imageUrl + '" class="item-modal-preview-image" alt="">';
+
+        if (itemImagePickerBtn) {
+            const label = itemName ? itemName + '\u306e\u753b\u50cf\u3092\u5909\u66f4' : '\u753b\u50cf\u3092\u5909\u66f4';
+            itemImagePickerBtn.setAttribute('aria-label', label);
+            itemImagePickerBtn.title = label;
+        }
+        return;
+    }
+
+    itemImagePreview.classList.add('item-modal-image-placeholder');
+    itemImagePreview.innerHTML = getItemImagePlaceholderMarkup();
+
+    if (itemImagePickerBtn) {
+        itemImagePickerBtn.setAttribute('aria-label', '\u753b\u50cf\u3092\u767b\u9332');
+        itemImagePickerBtn.title = '\u753b\u50cf\u3092\u767b\u9332';
+    }
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('\u753b\u50cf\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function loadImageElement(src) {
+    return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('\u753b\u50cf\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f'));
+        image.src = src;
+    });
+}
+
+async function createOptimizedImageDataUrl(file) {
+    if (!file || !file.type.startsWith('image/')) {
+        throw new Error('\u753b\u50cf\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044');
+    }
+
+    const originalDataUrl = await readFileAsDataUrl(file);
+    const image = await loadImageElement(originalDataUrl);
+    const longestSide = Math.max(image.naturalWidth || 1, image.naturalHeight || 1);
+    const scale = Math.min(1, IMAGE_MAX_DIMENSION / longestSide);
+    const width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+    const height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+        return originalDataUrl;
+    }
+
+    context.clearRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+
+    const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const optimizedDataUrl = mimeType === 'image/png'
+        ? canvas.toDataURL(mimeType)
+        : canvas.toDataURL(mimeType, IMAGE_OUTPUT_QUALITY);
+
+    if (optimizedDataUrl.length > IMAGE_MAX_DATA_URL_LENGTH) {
+        throw new Error('\u753b\u50cf\u30b5\u30a4\u30ba\u304c\u5927\u304d\u3059\u304e\u307e\u3059\u3002\u3082\u3046\u5c11\u3057\u5c0f\u3055\u3044\u753b\u50cf\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044');
+    }
+
+    return optimizedDataUrl;
+}
+
+function triggerItemImagePicker() {
+    itemImageFileInput?.click();
+}
+
+async function handleItemImageSelection(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+        const imageUrl = await createOptimizedImageDataUrl(file);
+        if (itemImageUrlInput) itemImageUrlInput.value = imageUrl;
+        renderItemImagePreview(imageUrl, itemNameInput?.value.trim() || '');
+        showToast('\u753b\u50cf\u3092\u53cd\u6620\u3057\u307e\u3057\u305f');
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || '\u753b\u50cf\u306e\u767b\u9332\u306b\u5931\u6557\u3057\u307e\u3057\u305f');
+    } finally {
+        event.target.value = '';
+    }
+}
+
+function clearItemImage(showFeedback = true) {
+    if (itemImageUrlInput) itemImageUrlInput.value = '';
+    if (itemImageFileInput) itemImageFileInput.value = '';
+    renderItemImagePreview('', itemNameInput?.value.trim() || '');
+
+    if (showFeedback) {
+        showToast('\u753b\u50cf\u3092\u524a\u9664\u3057\u307e\u3057\u305f');
+    }
+}
+
+function getCardImageInput(itemId) {
+    return document.getElementById(`card-image-input-${itemId}`);
+}
+
+function openCardImagePicker(itemId, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    getCardImageInput(itemId)?.click();
+}
+
+async function updateItemImage(itemId, imageUrl) {
+    const item = state.inventory.find(entry => entry.id === itemId);
+    if (!item) return;
+
+    const previousImageUrl = item.imageUrl || '';
+    item.imageUrl = imageUrl;
+
+    if (activeItemId === itemId && itemImageUrlInput) {
+        itemImageUrlInput.value = imageUrl;
+        renderItemImagePreview(imageUrl, itemNameInput?.value.trim() || item.name || '');
+    }
+
+    render();
+
+    if (!db) {
+        saveLocalInventory();
+        return;
+    }
+
+    try {
+        await db.collection('inventory').doc(itemId).update({ imageUrl });
+    } catch (error) {
+        item.imageUrl = previousImageUrl;
+        if (activeItemId === itemId && itemImageUrlInput) {
+            itemImageUrlInput.value = previousImageUrl;
+            renderItemImagePreview(previousImageUrl, itemNameInput?.value.trim() || item.name || '');
+        }
+        render();
+        throw error;
+    }
+}
+
+async function handleCardImageSelection(itemId, event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+        const imageUrl = await createOptimizedImageDataUrl(file);
+        await updateItemImage(itemId, imageUrl);
+        showToast('\u753b\u50cf\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f');
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || '\u753b\u50cf\u306e\u767b\u9332\u306b\u5931\u6557\u3057\u307e\u3057\u305f');
+    } finally {
+        event.target.value = '';
+    }
+}
+
 // --- ACTIONS ---
 
 function setCategoryFilter(cat) {
@@ -289,26 +476,37 @@ function saveSettings() {
 // Items Management
 function openItemModal(id = null) {
     // Always allowed
+    let imageUrl = '';
+    let itemName = '';
+
     if (id) {
         const item = state.inventory.find(i => i.id === id);
         if (!item) return;
         activeItemId = id;
-        itemModalTitle.textContent = '備品を編集';
+        itemModalTitle.textContent = '\u5099\u54c1\u3092\u7de8\u96c6';
         itemNameInput.value = item.name;
-        itemCategorySelect.value = item.category || 'その他';
-        if (itemImageUrlInput) itemImageUrlInput.value = item.imageUrl || '';
+        itemCategorySelect.value = item.category || '\u305d\u306e\u4ed6';
+        imageUrl = item.imageUrl || '';
+        itemName = item.name || '';
+        if (itemImageUrlInput) itemImageUrlInput.value = imageUrl;
         modalDeleteBtn.classList.remove('hidden');
     } else {
         activeItemId = null;
-        itemModalTitle.textContent = '備品を登録';
+        itemModalTitle.textContent = '\u5099\u54c1\u3092\u767b\u9332';
         itemNameInput.value = '';
-        itemCategorySelect.value = '事務用品';
+        itemCategorySelect.value = '\u4e8b\u52d9\u7528\u54c1';
         if (itemImageUrlInput) itemImageUrlInput.value = '';
         modalDeleteBtn.classList.add('hidden');
     }
+
+    if (itemImageFileInput) itemImageFileInput.value = '';
+    renderItemImagePreview(imageUrl, itemName);
     itemModal.classList.remove('hidden');
 }
-function closeItemModal() { itemModal.classList.add('hidden'); }
+function closeItemModal() {
+    if (itemImageFileInput) itemImageFileInput.value = '';
+    itemModal.classList.add('hidden');
+}
 
 async function saveItem() {
     const name = itemNameInput.value.trim();
@@ -551,16 +749,21 @@ function render() {
             : `<i class="fa-solid ${getPictogram(item.name)} item-placeholder-icon"></i>`;
 
         const statusContent = pendingCount > 0
-            ? `<div class="cart-item-badge">★ 申請中: ${pendingCount}件</div>`
-            : '';
+            ? `<div class="cart-item-badge">\u4fdd\u7559\u4e2d: ${pendingCount}\u4ef6</div>`
+            : "";
+        const uploadButtonTitle = item.imageUrl ? "\u753b\u50cf\u3092\u5909\u66f4" : "\u753b\u50cf\u3092\u767b\u9332";
 
         card.innerHTML = `
             <div class="item-card-image-container">
                 ${imgContent}
+                <input type="file" id="card-image-input-${item.id}" class="card-image-upload-input" accept="image/*" onchange="handleCardImageSelection('${item.id}', event)">
+                <button type="button" class="card-image-upload-btn" onclick="openCardImagePicker('${item.id}', event)" onpointerdown="event.stopPropagation()" title="${uploadButtonTitle}" aria-label="${uploadButtonTitle}">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
             </div>
             <div class="card-name">${item.name}</div>
             <div class="card-meta-container">
-                <div class="card-category">${item.category || 'その他'}</div>
+                <div class="card-category">${item.category || '\u305d\u306e\u4ed6'}</div>
             </div>
             <div class="card-status-container">
                 ${statusContent}
@@ -741,6 +944,11 @@ window.openItemModal = openItemModal;
 window.closeItemModal = closeItemModal;
 window.saveItem = saveItem;
 window.deleteItemFromModal = deleteItemFromModal;
+window.triggerItemImagePicker = triggerItemImagePicker;
+window.handleItemImageSelection = handleItemImageSelection;
+window.clearItemImage = clearItemImage;
+window.openCardImagePicker = openCardImagePicker;
+window.handleCardImageSelection = handleCardImageSelection;
 window.openRequestModal = openRequestModal;
 window.closeRequestModal = closeRequestModal;
 window.confirmRequest = confirmRequest;
