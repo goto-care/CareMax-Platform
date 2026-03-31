@@ -152,12 +152,31 @@
                         <option value="その他">その他</option>
                     </select>
                 </div>
-                <!-- Image URL option hidden for simplicity as requested, keeping logic just in case or add back if needed currently hidden in UI logic but here -->
-                <div class="form-group hidden">
-                    <label>画像URL</label>
-                    <input type="text" id="item-image-url-input">
+                <div class="form-group">
+                    <label>&#x753b;&#x50cf;</label>
+                    <div class="item-image-field">
+                        <button type="button" id="item-image-picker-btn" class="item-modal-image-preview" onclick="triggerItemImagePicker()">
+                            <div id="item-image-preview" class="item-modal-image-preview-content item-modal-image-placeholder">
+                                <div class="item-modal-image-empty">
+                                    <i class="fa-regular fa-image"></i>
+                                    <span>&#x753b;&#x50cf;&#x3092;&#x307e;&#x3060;&#x767b;&#x9332;&#x3057;&#x3066;&#x3044;&#x307e;&#x305b;&#x3093;</span>
+                                    <small>&#x30af;&#x30ea;&#x30c3;&#x30af;&#x3057;&#x3066;&#x753b;&#x50cf;&#x3092;&#x9078;&#x629e;&#x3067;&#x304d;&#x307e;&#x3059;</small>
+                                </div>
+                            </div>
+                        </button>
+                        <div class="item-modal-image-actions">
+                            <button type="button" class="secondary-inline-btn" onclick="triggerItemImagePicker()">
+                                <i class="fa-solid fa-upload"></i> &#x753b;&#x50cf;&#x3092;&#x9078;&#x629e;
+                            </button>
+                            <button type="button" class="ghost-inline-btn" onclick="clearItemImage()">
+                                <i class="fa-solid fa-trash"></i> &#x753b;&#x50cf;&#x3092;&#x524a;&#x9664;
+                            </button>
+                        </div>
+                        <p class="item-image-hint">&#x30ab;&#x30fc;&#x30c9;&#x4e0a;&#x306e;&#x30a2;&#x30a4;&#x30b3;&#x30f3;&#x90e8;&#x5206;&#x304b;&#x3089;&#x3082;&#x753b;&#x50cf;&#x3092;&#x5dee;&#x3057;&#x66ff;&#x3048;&#x3067;&#x304d;&#x307e;&#x3059;&#x3002;</p>
+                        <input type="file" id="item-image-file-input" class="hidden" accept="image/*" onchange="handleItemImageSelection(event)">
+                        <input type="hidden" id="item-image-url-input">
+                    </div>
                 </div>
-            </div>
             <div class="modal-footer footer-spread">
                 <button id="modal-delete-btn" class="delete-link-btn hidden" onclick="deleteItemFromModal()">
                     <i class="fa-solid fa-trash"></i> 削除

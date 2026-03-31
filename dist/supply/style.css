@@ -930,3 +930,187 @@ body {
 .inventory-grid.view-list .admin-actions {
     display: flex;
 }
+
+.item-card-image-container {
+    position: relative;
+    isolation: isolate;
+}
+
+.card-image-upload-input {
+    display: none;
+}
+
+.card-image-upload-btn {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--text-main);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 14px 28px -20px rgba(15, 23, 42, 0.8);
+    opacity: 0.92;
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+    z-index: 2;
+}
+
+.card-image-upload-btn:hover {
+    transform: translateY(-1px);
+    opacity: 1;
+}
+
+.item-card-image-container:focus-within .card-image-upload-btn,
+.item-card:hover .card-image-upload-btn {
+    opacity: 1;
+}
+
+.item-card-image-container .card-image-upload-btn:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.45);
+    outline-offset: 2px;
+}
+
+.item-image-field {
+    display: grid;
+    gap: 14px;
+}
+
+.item-modal-image-preview {
+    width: 100%;
+    border: 1px dashed #bfdbfe;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(239, 246, 255, 0.95), rgba(248, 250, 252, 0.98));
+    padding: 0;
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+}
+
+.item-modal-image-preview:hover {
+    border-color: #60a5fa;
+    transform: translateY(-1px);
+    box-shadow: 0 18px 30px -26px rgba(59, 130, 246, 0.75);
+}
+
+.item-modal-image-preview-content {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-modal-image-placeholder {
+    color: #94a3b8;
+}
+
+.item-modal-image-empty {
+    display: grid;
+    place-items: center;
+    gap: 8px;
+    padding: 24px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.item-modal-image-empty i {
+    font-size: 2rem;
+    color: #60a5fa;
+}
+
+.item-modal-image-empty small {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.item-modal-preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 18px;
+    background: white;
+}
+
+.item-modal-image-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.secondary-inline-btn,
+.ghost-inline-btn {
+    border-radius: 999px;
+    padding: 10px 16px;
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.secondary-inline-btn {
+    border: 1px solid transparent;
+    background: var(--accent-primary);
+    color: white;
+    box-shadow: 0 10px 22px -18px rgba(59, 130, 246, 0.9);
+}
+
+.secondary-inline-btn:hover {
+    transform: translateY(-1px);
+    background: #2563eb;
+}
+
+.ghost-inline-btn {
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-main);
+}
+
+.ghost-inline-btn:hover {
+    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.item-image-hint {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.inventory-grid.view-small .card-image-upload-btn {
+    width: 32px;
+    height: 32px;
+    right: 8px;
+    bottom: 8px;
+}
+
+.inventory-grid.view-list .item-card {
+    grid-template-columns: 72px minmax(0, 1fr) 120px 140px 180px;
+}
+
+.inventory-grid.view-list .item-card-image-container {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.inventory-grid.view-list .item-card-image {
+    padding: 4px;
+}
+
+.inventory-grid.view-list .card-image-upload-btn {
+    width: 28px;
+    height: 28px;
+    right: 6px;
+    bottom: 6px;
+}
