@@ -211,7 +211,16 @@
         }
 
         .app-icon.kaientai-x {
-            background: linear-gradient(135deg, #ff0080, #ff8c00);
+            background: none;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .app-icon.kaientai-x img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .app-icon.kaientai-s {
@@ -354,7 +363,7 @@
 
         <a href="https://kaientai-x.netlify.app/" class="app-card" target="_blank">
             <div class="app-icon kaientai-x">
-                <i class="fa-solid fa-building-columns"></i>
+                <img src="/faviconX3.png" alt="Kaientai-X icon">
             </div>
             <h2 class="app-title">Kaientai-X</h2>
             <p class="app-desc">最新の展示会情報とイノベーションを体験できるプラットフォームです。</p>
