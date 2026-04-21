@@ -12,7 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=askul-logo-20260421-2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <!-- Auth script removed dependency -->
 </head>
@@ -24,7 +24,7 @@
         <nav class="nav-sidebar">
             <a href="../index.html" class="logo-section">
                 <div class="logo-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-                <span class="logo-text">備品管理</span>
+                <span class="logo-text">&#20633;&#21697;&#31649;&#29702;</span>
             </a>
 
             <div class="nav-menu">
@@ -50,6 +50,9 @@
                 <div class="nav-item" onclick="toggleHistory()">
                     <i class="fa-solid fa-clock-rotate-left"></i> 注文履歴
                 </div>
+                <a href="https://solution.soloel.com/" class="soloel-logo-link" target="_blank" rel="noopener noreferrer" aria-label="ASKUL SOLOEL">
+                    <img src="askul-logo.jpg" class="sidebar-logo-image" alt="ASKUL">
+                </a>
             </div>
         </nav>
 
@@ -177,6 +180,7 @@
                         <input type="hidden" id="item-image-url-input">
                     </div>
                 </div>
+            </div>
             <div class="modal-footer footer-spread">
                 <button id="modal-delete-btn" class="delete-link-btn hidden" onclick="deleteItemFromModal()">
                     <i class="fa-solid fa-trash"></i> 削除
@@ -218,7 +222,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js?v=request-detail-20260421-1"></script>
 </body>
 
 </html>

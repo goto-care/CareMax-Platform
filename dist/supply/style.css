@@ -63,6 +63,34 @@ body {
     color: var(--text-main);
 }
 
+.soloel-logo-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 64px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: #ffffff;
+    box-shadow: var(--shadow-sm);
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.soloel-logo-link:hover {
+    transform: translateY(-1px);
+    border-color: #cbd5e1;
+    box-shadow: var(--shadow-md);
+}
+
+.sidebar-logo-image {
+    display: block;
+    width: 100%;
+    max-width: 160px;
+    height: auto;
+}
+
 .logo-icon {
     width: 40px;
     height: 40px;

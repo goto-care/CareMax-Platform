@@ -559,9 +559,21 @@ async function deleteItemFromModal() {
 
 // --- NEW REQUEST FLOW ---
 
+function getRequestUser() {
+    return (state.user && state.user.uid)
+        ? state.user
+        : { uid: 'user-common', name: 'Staff', email: '' };
+}
+
+
 function openRequestModal(itemId) {
-    const existing = state.requests.find(r => r.itemId === itemId && r.userId === state.user.uid && r.status === 'Draft');
-    requestItemName.textContent = state.inventory.find(i => i.id === itemId)?.name;
+    if (!itemId || !requestModal || !requestItemName || !requestCommentInput) return;
+
+    const requestUser = getRequestUser();
+    const item = state.inventory.find(i => i.id === itemId);
+    const existing = state.requests.find(r => r.itemId === itemId && r.userId === requestUser.uid && r.status === 'Draft');
+
+    requestItemName.textContent = item?.name || '';
 
     if (existing) {
         pendingRequestItemId = itemId;
@@ -582,17 +594,18 @@ async function confirmRequest() {
     if (!pendingRequestItemId) return;
     const comment = requestCommentInput.value.trim();
     const itemId = pendingRequestItemId;
+    const requestUser = getRequestUser();
 
     if (!db) {
-        const existing = state.requests.find(r => r.itemId === itemId && r.userId === state.user.uid && r.status === 'Draft');
+        const existing = state.requests.find(r => r.itemId === itemId && r.userId === requestUser.uid && r.status === 'Draft');
         if (existing) {
             existing.comment = comment;
         } else {
             state.requests.push({
                 id: 'req-' + Date.now(),
                 itemId: itemId,
-                userId: state.user.uid,
-                userName: state.user.name,
+                userId: requestUser.uid,
+                userName: requestUser.name,
                 timestamp: new Date().toISOString(),
                 status: 'Draft',
                 comment: comment
@@ -607,8 +620,8 @@ async function confirmRequest() {
             // Simplified for Demo Logic Priority, assume success
             await db.collection("requests").add({
                 itemId: itemId,
-                userId: state.user.uid,
-                userName: state.user.name,
+                userId: requestUser.uid,
+                userName: requestUser.name,
                 timestamp: new Date().toISOString(),
                 status: 'Draft',
                 comment: comment
@@ -769,11 +782,11 @@ function render() {
                 ${statusContent}
             </div>
             <div class="card-footer">
-                <button class="request-toggle-btn ${btnClass}" onclick="openRequestModal('${item.id}')">
+                <button type="button" class="request-toggle-btn ${btnClass}" onclick="event.stopPropagation(); openRequestModal('${item.id}')" onpointerdown="event.stopPropagation()">
                     ${btnText}
                 </button>
                 <div class="admin-actions">
-                    <button class="card-edit-btn" onclick="openItemModal('${item.id}')"><i class="fa-solid fa-pen"></i></button>
+                    <button type="button" class="card-edit-btn" onclick="event.stopPropagation(); openItemModal('${item.id}')" onpointerdown="event.stopPropagation()" title="&#21830;&#21697;&#12434;&#32232;&#38598;" aria-label="&#21830;&#21697;&#12434;&#32232;&#38598;"><i class="fa-solid fa-pen"></i></button>
                 </div>
             </div>
         `;
