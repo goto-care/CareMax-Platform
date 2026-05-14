@@ -35,28 +35,40 @@
         body {
             font-family: 'Inter', 'Outfit', sans-serif;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            width: 100%;
+            background:
+                radial-gradient(circle at 76% 12%, rgba(226, 126, 238, 0.22), transparent 34%),
+                radial-gradient(circle at 18% 28%, rgba(69, 116, 238, 0.16), transparent 38%),
+                linear-gradient(180deg, #eef4ff 0%, #fbf7ff 55%, #ffffff 100%);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
+            align-items: stretch;
+            justify-content: flex-start;
+            padding: 0;
+            overflow-x: hidden;
         }
 
         .login-container {
-            text-align: center;
-            margin-bottom: 60px;
+            align-items: center;
+            background: linear-gradient(105deg, #2563eb 0%, #7c3aed 52%, #db6bdc 100%);
+            box-shadow: 0 18px 48px rgba(56, 76, 184, 0.24);
+            display: grid;
+            grid-template-columns: minmax(280px, 1fr) auto;
+            min-height: 92px;
+            padding: 20px 40px;
+            text-align: left;
+            width: 100%;
         }
 
         .logo-large {
-            font-size: 3rem;
+            font-size: clamp(2rem, 3vw, 2.65rem);
             font-weight: 800;
             color: white;
-            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            margin-bottom: 16px;
+            text-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+            margin-bottom: 0;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 16px;
         }
 
@@ -68,9 +80,7 @@
         }
 
         .tagline {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.1rem;
-            margin-bottom: 32px;
+            display: none;
         }
 
         .google-btn {
@@ -108,15 +118,27 @@
             display: none;
             align-items: center;
             gap: 12px;
-            background: rgba(255, 255, 255, 0.2);
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: end;
+            background: rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(10px);
-            padding: 12px 24px;
-            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 10px 18px;
+            border-radius: 14px;
             color: white;
         }
 
         .user-info.show {
             display: inline-flex;
+        }
+
+        #loading,
+        #google-login-btn,
+        #demo-login-btn {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: end;
         }
 
         .user-avatar {
@@ -154,60 +176,428 @@
         }
 
         .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            display: flex;
+            flex-direction: column;
             gap: 24px;
-            max-width: 95%;
-            /* Changed to percentage to fill wide screens */
+            max-width: none;
             width: 100%;
-            margin: 0 auto;
+            margin: 0;
+            padding: 36px 24px 48px;
+        }
+
+        .launcher-shell {
+            display: grid;
+            grid-template-columns: 224px minmax(0, 1fr);
+            gap: 32px;
+            align-items: start;
+            width: 100%;
+        }
+
+        .launcher-sidebar {
+            position: sticky;
+            top: 24px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.78);
+            border-radius: 16px;
+            box-shadow: 0 16px 42px rgba(40, 68, 148, 0.12);
+            min-height: calc(100vh - 140px);
+            padding: 16px;
+        }
+
+        .dashboard-label {
+            color: #68758c;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0;
+            margin: 2px 8px 12px;
+        }
+
+        .dashboard-item {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 12px;
+            color: #475569;
+            cursor: pointer;
+            display: grid;
+            font: inherit;
+            font-size: 0.9rem;
+            font-weight: 800;
+            gap: 10px;
+            grid-template-columns: 24px minmax(0, 1fr) auto;
+            min-height: 48px;
+            padding: 0 12px;
+            text-align: left;
+            width: 100%;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+        }
+
+        .dashboard-item i {
+            color: #64748b;
+            text-align: center;
+        }
+
+        .dashboard-item.active {
+            background: #1f2937;
+            box-shadow: 0 10px 22px rgba(31, 41, 55, 0.16);
+            color: #fff;
+        }
+
+        .dashboard-item.active i {
+            color: #fff;
+        }
+
+        .dashboard-item + .dashboard-item {
+            margin-top: 6px;
+        }
+
+        .dashboard-count {
+            align-items: center;
+            background: rgba(15, 23, 42, 0.08);
+            border-radius: 999px;
+            color: inherit;
+            display: inline-flex;
+            font-size: 0.72rem;
+            justify-content: center;
+            min-width: 26px;
+            padding: 3px 7px;
+        }
+
+        .dashboard-divider {
+            background: rgba(100, 116, 139, 0.16);
+            height: 1px;
+            margin: 14px 0;
+        }
+
+        .dashboard-section-label {
+            color: #94a3b8;
+            font-size: 0.7rem;
+            font-weight: 800;
+            margin: 12px 8px 8px;
+        }
+
+        .launcher-main {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-width: 0;
+        }
+
+        #launcher-sections {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .launcher-toolbar {
+            background: transparent;
+            backdrop-filter: blur(18px);
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: block;
+            padding: 0;
+        }
+
+        .launcher-search {
+            position: relative;
+        }
+
+        .launcher-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .launcher-search input {
+            width: 100%;
+            height: 60px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--text-main);
+            font: inherit;
+            font-size: 1.05rem;
+            outline: none;
+            padding: 0 18px 0 54px;
+            box-shadow: 0 16px 42px rgba(52, 64, 110, 0.12);
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .launcher-search input:focus {
+            background: #fff;
+            border-color: rgba(66, 133, 244, 0.55);
+            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.12);
+        }
+
+        .launcher-tabs {
+            display: none;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .launcher-tab {
+            border: 1px solid rgba(15, 23, 42, 0.1);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.68);
+            color: #475569;
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.86rem;
+            font-weight: 700;
+            min-height: 38px;
+            padding: 0 14px;
+            transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.2s;
+        }
+
+        .launcher-tab:hover {
+            transform: translateY(-1px);
+            background: #fff;
+        }
+
+        .launcher-tab.active {
+            background: #1e293b;
+            border-color: #1e293b;
+            color: #fff;
+        }
+
+        .launcher-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .launcher-section.hidden-by-filter {
+            display: none;
+        }
+
+        .launcher-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 16px;
+            padding: 0 4px;
+        }
+
+        .launcher-section-title {
+            color: #0f172a;
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-shadow: none;
+        }
+
+        .launcher-section-meta {
+            color: #2563eb;
+            font-size: 0.84rem;
+            font-weight: 700;
+        }
+
+        .launcher-section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .launcher-section[data-section="kaientai"] .launcher-section-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         }
 
         .app-card {
-            background: var(--glass-bg);
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-xl);
-            padding: 40px 32px;
-            text-align: center;
+            border: 1px solid rgba(226, 232, 240, 0.72);
+            border-radius: 14px;
+            position: relative;
             cursor: pointer;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
             text-decoration: none;
             color: var(--text-main);
+            overflow: hidden;
+            box-shadow: 0 12px 28px rgba(49, 65, 113, 0.11);
+        }
+
+        .app-card-link {
+            align-items: center;
+            color: var(--text-main);
+            display: grid;
+            gap: 14px 16px;
+            grid-template-columns: 72px minmax(0, 1fr);
+            grid-template-rows: auto 1fr 22px;
+            min-height: 172px;
+            padding: 22px 18px 16px;
+            text-align: left;
+            text-decoration: none;
         }
 
         .app-card:hover {
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.34);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 18px 44px rgba(52, 64, 110, 0.18);
+        }
+
+        .app-card.dragging {
+            opacity: 0.55;
+            transform: scale(0.98);
+        }
+
+        .app-card[draggable="true"] .app-card-link {
+            cursor: grab;
+        }
+
+        .launcher-section[data-section="favorites"] .launcher-section-grid {
+            grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+        }
+
+        .launcher-section[data-section="favorites"] .app-card-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 132px;
+            padding: 16px 12px 14px;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .launcher-section[data-section="favorites"] .app-icon {
+            grid-column: auto;
+            grid-row: auto;
+        }
+
+        .launcher-section[data-section="favorites"] .app-copy {
+            grid-column: auto;
+            grid-row: auto;
+            width: 100%;
+        }
+
+        .launcher-section[data-section="favorites"] .app-title {
+            margin: 0;
+        }
+
+        .launcher-section[data-section="favorites"] .app-desc,
+        .launcher-section[data-section="favorites"] .app-card-action {
+            display: none;
+        }
+
+        .launcher-section[data-section="favorites"] .favorite-btn {
+            right: 8px;
+            top: 8px;
+        }
+
+        .app-card.hidden-by-filter {
+            display: none;
+        }
+
+        .app-card-action {
+            align-self: start;
+            color: #94a3b8;
+            display: flex;
+            font-size: 1rem;
+            grid-column: 2;
+            grid-row: 3;
+            justify-content: flex-end;
+            align-self: end;
+        }
+
+        .app-copy {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            min-width: 0;
+        }
+
+        .favorite-btn {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 50%;
+            color: #94a3b8;
+            cursor: pointer;
+            display: inline-flex;
+            height: 28px;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+            width: 28px;
+            z-index: 4;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.06);
+        }
+
+        .favorite-btn.active {
+            background: #fffbeb;
+            border-color: rgba(245, 158, 11, 0.45);
+            color: #f59e0b;
         }
 
         .app-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 20px;
+            width: 72px;
+            height: 72px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 2rem;
+            grid-column: 1;
+            grid-row: 1 / span 2;
             color: white;
-            margin: 0 auto 24px;
+            margin: 0;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
 
         .app-icon.supply {
-            background: linear-gradient(135deg, #6366f1, #a855f7);
+            background: linear-gradient(135deg, #66bb6a, #2e7d32);
         }
 
         .app-icon.catalog {
-            background: linear-gradient(135deg, #10b981, #14b8a6);
+            background: linear-gradient(135deg, #ff9f43, #f97316);
         }
 
         .app-icon.jijogu {
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
+            background: linear-gradient(135deg, #3b82f6, #0f766e);
         }
 
         .app-icon.tasking {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
+            background: linear-gradient(135deg, #22c1c3, #2aa7a5);
+        }
+
+        .app-icon.recoru {
+            background: linear-gradient(135deg, #38bdf8, #2563eb);
+        }
+
+        .app-icon.cybozu {
+            background: linear-gradient(135deg, #facc15, #f97316);
+        }
+
+        .app-icon.cmcystem {
+            background: linear-gradient(135deg, #64748b, #1e293b);
+        }
+
+        .app-icon.maildealer {
+            background: linear-gradient(135deg, #22c55e, #0f766e);
+        }
+
+        .app-icon.favicon-icon {
+            background: #fff;
+            overflow: hidden;
+            padding: 12px;
+        }
+
+        .app-icon.favicon-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .app-icon.kaientai-c {
@@ -225,14 +615,16 @@
         }
 
         .app-icon.kaientai-x,
-        .app-icon.kaientai-s {
+        .app-icon.kaientai-s,
+        .app-icon.kaientai-i {
             background: none;
             overflow: hidden;
             padding: 0;
         }
 
         .app-icon.kaientai-x img,
-        .app-icon.kaientai-s img {
+        .app-icon.kaientai-s img,
+        .app-icon.kaientai-i img {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -249,8 +641,8 @@
         }
 
         .app-icon.kaientai-p {
-            background: linear-gradient(135deg, #06b6d4, #2563eb);
-            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.4);
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            box-shadow: 0 8px 32px rgba(109, 40, 217, 0.28);
         }
 
         .app-icon.kaientai-p svg {
@@ -263,15 +655,84 @@
         }
 
         .app-title {
-            font-size: 1.4rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 8px;
+            line-height: 1.25;
+            margin: 0 34px 8px 0;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .app-desc {
             color: var(--text-muted);
-            font-size: 0.9rem;
-            line-height: 1.5;
+            display: -webkit-box;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            overflow: hidden;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+        }
+
+        .app-desc:empty {
+            display: none;
+        }
+
+        .app-icon svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .launcher-empty {
+            background: rgba(255, 255, 255, 0.86);
+            border: 1px dashed rgba(15, 23, 42, 0.2);
+            border-radius: 16px;
+            color: #64748b;
+            font-weight: 700;
+            padding: 28px;
+            text-align: center;
+        }
+
+        @media (max-width: 760px) {
+            body {
+                padding: 0;
+            }
+
+            .login-container {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                padding: 22px 18px;
+            }
+
+            .logo-large {
+                font-size: 2rem;
+                flex-wrap: wrap;
+            }
+
+            .apps-grid {
+                padding: 22px 14px 34px;
+            }
+
+            .launcher-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .launcher-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .launcher-sidebar {
+                position: static;
+            }
+
+            .launcher-tabs {
+                justify-content: flex-start;
+            }
+
+            .launcher-section-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .hidden {
@@ -668,6 +1129,42 @@
             <h2 class="app-title">Kaientai-D</h2>
             <p class="app-desc">製品情報の閲覧と検索をスムーズに行えるデジタルカタログ・プラットフォームです。</p>
         </a>
+
+        <a href="https://invoice-app-jet-five.vercel.app/" class="app-card" target="_blank">
+            <div class="app-icon kaientai-i">
+                <img src="/kaientai-i-logo.png" alt="Kaientai-I icon">
+            </div>
+            <h2 class="app-title">Kaientai-I</h2>
+            <p class="app-desc">請求書作成、管理アプリ。</p>
+        </a>
+
+        <a href="https://app.recoru.in/ap/" class="app-card" target="_blank">
+            <div class="app-icon favicon-icon recoru">
+                <img src="https://www.google.com/s2/favicons?domain=app.recoru.in&sz=128" alt="勤怠管理レコル icon">
+            </div>
+            <h2 class="app-title">勤怠管理レコル</h2>
+        </a>
+
+        <a href="https://plan.caremax.co.jp/scripts/cbag/ag.exe?" class="app-card" target="_blank">
+            <div class="app-icon cybozu">
+                <i class="fa-solid fa-calendar-days"></i>
+            </div>
+            <h2 class="app-title">サイボウズ</h2>
+        </a>
+
+        <a href="https://register.caremax.co.jp/cmax/home/top.php" class="app-card" target="_blank">
+            <div class="app-icon cmcystem">
+                <i class="fa-solid fa-server"></i>
+            </div>
+            <h2 class="app-title">CMCystem</h2>
+        </a>
+
+        <a href="https://md91.maildealer.jp/app/" class="app-card" target="_blank">
+            <div class="app-icon maildealer">
+                <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+            <h2 class="app-title">メールディーラー</h2>
+        </a>
     </div>
 
     <!-- Easter Egg: Kaientai A-Z Checker Modal -->
@@ -721,6 +1218,7 @@
 
         const db = firebase.firestore();
         db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn(e));
+        const launcherBadgeCounts = { supply: 0, jijogu: 0 };
 
         // Auth State Observer
         auth.onAuthStateChanged((user) => {
@@ -850,53 +1348,805 @@
             document.getElementById('apps-grid')?.classList.add('hidden');
 
             // Hide badges when logged out
-            document.getElementById('supply-badge')?.classList.add('hidden');
-            document.getElementById('jijogu-badge')?.classList.add('hidden');
+            setNotificationBadge('supply', 0);
+            setNotificationBadge('jijogu', 0);
 
             localStorage.removeItem('caremax-user');
         }
 
+        function setNotificationBadge(type, count) {
+            launcherBadgeCounts[type] = count;
+            document.querySelectorAll(`[data-badge-type="${type}"], #${type}-badge`).forEach(badge => {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            });
+        }
+
         function updateNotificationBadges() {
-            // Initialize Firestore if not already done (need to check if initialized? handled by firebase.initializeApp)
             const db = firebase.firestore();
 
-            // Supply Badge - Listen to realtime updates
             db.collection('requests').where('status', '==', 'Pending')
                 .onSnapshot((snapshot) => {
-                    const count = snapshot.size;
-                    const supplyBadge = document.getElementById('supply-badge');
-                    if (supplyBadge) {
-                        if (count > 0) {
-                            supplyBadge.textContent = count;
-                            supplyBadge.classList.remove('hidden');
-                        } else {
-                            supplyBadge.classList.add('hidden');
-                        }
-                    }
+                    setNotificationBadge('supply', snapshot.size);
                 }, (error) => {
                     console.error("Error getting badge count:", error);
                 });
 
-            // Jijogu Badge - Keep as is (localStorage) or update? User only asked for supply badge.
-            // Keeping existing logic for Jijogu safely wrapped
             try {
                 const jijoguData = localStorage.getItem('caremax-jijogu');
                 if (jijoguData) {
                     const records = JSON.parse(jijoguData);
                     const today = new Date().toISOString().split('T')[0];
                     const todayShipCount = records.filter(r => r.shipDate === today).length;
-                    const jijoguBadge = document.getElementById('jijogu-badge');
-                    if (jijoguBadge) {
-                        if (todayShipCount > 0) {
-                            jijoguBadge.textContent = todayShipCount;
-                            jijoguBadge.classList.remove('hidden');
-                        } else {
-                            jijoguBadge.classList.add('hidden');
-                        }
-                    }
+                    setNotificationBadge('jijogu', todayShipCount);
+                } else {
+                    setNotificationBadge('jijogu', 0);
                 }
             } catch (e) { console.warn('Jijogu badge error:', e); }
         }
+
+        function initAppLauncher() {
+            const container = document.getElementById('apps-grid');
+            if (!container || container.dataset.launcherReady === 'true') return;
+
+            const sourceCards = Array.from(container.querySelectorAll(':scope > .app-card'));
+            if (sourceCards.length === 0) return;
+
+            const favoritesKey = 'caremax-launcher-favorites';
+            const kaientaiOrderKey = 'caremax-launcher-kaientai-order';
+            const defaultFavoriteIds = ['supply', 'tasking', 'kaientai-i'];
+            let activeView = 'all';
+            let activeFilter = 'all';
+            let searchInput;
+            let sectionsRoot;
+            let emptyState;
+            let allCountEl;
+            let favoriteCountEl;
+            let draggedKaientaiId = null;
+
+            function escapeHTML(value) {
+                return String(value).replace(/[&<>"']/g, char => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[char]));
+            }
+
+            function makeAppId(title, href, index) {
+                const normalizedTitle = title.toLowerCase();
+                const normalizedHref = href.toLowerCase();
+                if (/^kaientai-[a-z]$/i.test(title)) return normalizedTitle;
+                if (normalizedHref.includes('supply/')) return 'supply';
+                if (normalizedHref.includes('catalog/')) return 'catalog';
+                if (normalizedHref.includes('jijogu/')) return 'jijogu';
+                if (normalizedHref.includes('tasking-caremax')) return 'tasking';
+                return `app-${index}`;
+            }
+
+            function getCardGroups(title, href) {
+                const groups = [];
+                if (/^Kaientai-[A-Z]$/i.test(title)) groups.push('kaientai');
+                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/')) groups.push('management');
+                if (href.includes('tasking-caremax')) groups.push('management');
+                return Array.from(new Set(groups.length ? groups : ['management']));
+            }
+
+            const apps = sourceCards.map((card, index) => {
+                const title = card.querySelector('.app-title')?.textContent.trim() || '';
+                const desc = card.querySelector('.app-desc')?.textContent.trim() || '';
+                const href = card.getAttribute('href') || '#';
+                const target = card.getAttribute('target') || '';
+                const iconEl = card.querySelector('.app-icon');
+                const badgeType = card.querySelector('#supply-badge') ? 'supply'
+                    : card.querySelector('#jijogu-badge') ? 'jijogu'
+                        : '';
+                const letter = title.match(/^Kaientai-([A-Z])$/i)?.[1]?.toUpperCase() || '';
+                const groups = getCardGroups(title, href);
+                const id = makeAppId(title, href, index);
+                return {
+                    id,
+                    title,
+                    desc,
+                    href,
+                    target,
+                    iconHTML: iconEl ? iconEl.outerHTML : '',
+                    badgeType,
+                    letter,
+                    groups,
+                    search: `${title} ${desc} ${href} ${groups.join(' ')}`.toLowerCase()
+                };
+            });
+            window.caremaxLauncherApps = apps;
+
+            function loadFavoriteIds() {
+                try {
+                    const stored = localStorage.getItem(favoritesKey);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) return new Set(parsed.filter(id => apps.some(app => app.id === id)));
+                    }
+                } catch (e) { console.warn('Favorite load error:', e); }
+                return new Set(defaultFavoriteIds.filter(id => apps.some(app => app.id === id)));
+            }
+
+            let favoriteIds = loadFavoriteIds();
+
+            function persistFavoriteIds() {
+                localStorage.setItem(favoritesKey, JSON.stringify(Array.from(favoriteIds)));
+            }
+
+            function loadKaientaiOrder() {
+                try {
+                    const stored = localStorage.getItem(kaientaiOrderKey);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) return parsed;
+                    }
+                } catch (e) { console.warn('Kaientai order load error:', e); }
+                return [];
+            }
+
+            function getKaientaiApps() {
+                const kaientaiApps = apps
+                    .filter(app => app.groups.includes('kaientai'))
+                    .sort((a, b) => a.letter.localeCompare(b.letter));
+                const savedOrder = loadKaientaiOrder().filter(id => kaientaiApps.some(app => app.id === id));
+                const ordered = savedOrder
+                    .map(id => kaientaiApps.find(app => app.id === id))
+                    .filter(Boolean);
+                const missing = kaientaiApps.filter(app => !savedOrder.includes(app.id));
+                return [...ordered, ...missing];
+            }
+
+            function saveKaientaiOrder(orderedIds) {
+                localStorage.setItem(kaientaiOrderKey, JSON.stringify(orderedIds));
+            }
+
+            function isSectionAllowed(sectionId) {
+                return activeFilter === 'all' || activeFilter === sectionId;
+            }
+
+            function filterApps(sectionId, sectionApps) {
+                const query = searchInput.value.trim().toLowerCase();
+                return sectionApps.filter(app => {
+                    if (activeView === 'favorites' && activeFilter !== 'all' && activeFilter !== 'favorites') {
+                        if (!app.groups.includes(activeFilter)) return false;
+                    }
+                    if (activeView === 'all' && !isSectionAllowed(sectionId)) return false;
+                    return !query || app.search.includes(query);
+                });
+            }
+
+            function createAppCard(app, sectionId) {
+                const card = document.createElement('article');
+                const isFavorite = favoriteIds.has(app.id);
+                card.className = `app-card${isFavorite ? ' is-favorite' : ''}`;
+                card.dataset.appId = app.id;
+                card.dataset.groups = app.groups.join(' ');
+                card.dataset.search = app.search;
+
+                if (sectionId === 'kaientai') {
+                    card.draggable = true;
+                    card.addEventListener('dragstart', e => {
+                        draggedKaientaiId = app.id;
+                        card.classList.add('dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', app.id);
+                    });
+                    card.addEventListener('dragend', () => {
+                        draggedKaientaiId = null;
+                        card.classList.remove('dragging');
+                    });
+                    card.addEventListener('dragover', e => e.preventDefault());
+                    card.addEventListener('drop', e => {
+                        e.preventDefault();
+                        reorderKaientai(draggedKaientaiId, app.id, e);
+                    });
+                }
+
+                const favoriteBtn = document.createElement('button');
+                favoriteBtn.className = `favorite-btn${isFavorite ? ' active' : ''}`;
+                favoriteBtn.type = 'button';
+                favoriteBtn.setAttribute('aria-label', `${app.title}をお気に入り${isFavorite ? 'から外す' : 'に追加'}`);
+                favoriteBtn.setAttribute('aria-pressed', String(isFavorite));
+                favoriteBtn.innerHTML = '<i class="fa-solid fa-star"></i>';
+                favoriteBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (favoriteIds.has(app.id)) favoriteIds.delete(app.id);
+                    else favoriteIds.add(app.id);
+                    persistFavoriteIds();
+                    renderLauncher();
+                });
+
+                const link = document.createElement('a');
+                link.className = 'app-card-link';
+                link.href = app.href;
+                if (app.target) {
+                    link.target = app.target;
+                    link.rel = 'noopener noreferrer';
+                }
+                link.innerHTML = `
+                    ${app.iconHTML}
+                    <div class="app-copy">
+                        <h2 class="app-title">${escapeHTML(app.title)}</h2>
+                        <p class="app-desc">${escapeHTML(app.desc)}</p>
+                    </div>
+                    <span class="app-card-action">
+                        <i class="fa-solid ${app.target === '_blank' ? 'fa-arrow-up-right-from-square' : 'fa-chevron-right'}"></i>
+                    </span>
+                `;
+
+                if (app.badgeType) {
+                    link.querySelectorAll('.notification-badge').forEach(badge => {
+                        badge.removeAttribute('id');
+                        badge.dataset.badgeType = app.badgeType;
+                    });
+                }
+
+                card.appendChild(favoriteBtn);
+                card.appendChild(link);
+                return card;
+            }
+
+            function applyBadgeCounts() {
+                Object.entries(launcherBadgeCounts).forEach(([type, count]) => {
+                    setNotificationBadge(type, count);
+                });
+            }
+
+            function reorderKaientai(sourceId, targetId, event) {
+                if (!sourceId || !targetId || sourceId === targetId) return;
+                const orderedIds = getKaientaiApps().map(app => app.id);
+                const fromIndex = orderedIds.indexOf(sourceId);
+                const targetIndex = orderedIds.indexOf(targetId);
+                if (fromIndex === -1 || targetIndex === -1) return;
+
+                orderedIds.splice(fromIndex, 1);
+                const targetCard = event.currentTarget;
+                const rect = targetCard.getBoundingClientRect();
+                const insertAfter = event.clientY > rect.top + rect.height / 2 || event.clientX > rect.left + rect.width / 2;
+                const adjustedTargetIndex = orderedIds.indexOf(targetId);
+                orderedIds.splice(insertAfter ? adjustedTargetIndex + 1 : adjustedTargetIndex, 0, sourceId);
+                saveKaientaiOrder(orderedIds);
+                renderLauncher();
+            }
+
+            function updateDashboardCounts() {
+                if (allCountEl) allCountEl.textContent = apps.length;
+                if (favoriteCountEl) favoriteCountEl.textContent = favoriteIds.size;
+            }
+
+            function renderSection(section) {
+                const sectionApps = filterApps(section.id, section.apps);
+                if (sectionApps.length === 0) return 0;
+
+                const sectionEl = document.createElement('section');
+                sectionEl.className = 'launcher-section';
+                sectionEl.dataset.section = section.id;
+                sectionEl.innerHTML = `
+                    <div class="launcher-section-header">
+                        <h2 class="launcher-section-title">${section.title}</h2>
+                        <span class="launcher-section-meta">${section.meta}</span>
+                    </div>
+                    <div class="launcher-section-grid"></div>
+                `;
+
+                const grid = sectionEl.querySelector('.launcher-section-grid');
+                sectionApps.forEach(app => grid.appendChild(createAppCard(app, section.id)));
+                sectionsRoot.appendChild(sectionEl);
+                return sectionApps.length;
+            }
+
+            function getFavoriteApps() {
+                return apps.filter(app => favoriteIds.has(app.id));
+            }
+
+            function renderLauncher() {
+                sectionsRoot.innerHTML = '';
+                updateDashboardCounts();
+
+                const favoriteApps = getFavoriteApps();
+                let totalVisible = 0;
+
+                if (activeView === 'favorites') {
+                    totalVisible += renderSection({
+                        id: 'favorites',
+                        title: 'お気に入り',
+                        meta: `${favoriteApps.length}件`,
+                        apps: favoriteApps
+                    });
+                } else {
+                    const sections = [
+                        {
+                            id: 'favorites',
+                            title: 'よく使う',
+                            meta: 'お気に入り登録したアプリ',
+                            apps: favoriteApps
+                        },
+                        {
+                            id: 'kaientai',
+                            title: 'Kaientai シリーズ',
+                            meta: 'A-Z順・ドラッグで並び替え',
+                            apps: getKaientaiApps()
+                        },
+                        {
+                            id: 'management',
+                            title: '管理アプリ',
+                            meta: '社内業務ツール',
+                            apps: apps.filter(app => app.groups.includes('management'))
+                        }
+                    ];
+                    sections.forEach(section => {
+                        totalVisible += renderSection(section);
+                    });
+                }
+
+                emptyState.classList.toggle('hidden', totalVisible !== 0);
+                applyBadgeCounts();
+            }
+
+            container.innerHTML = '';
+            container.dataset.launcherReady = 'true';
+            container.innerHTML = `
+                <div class="launcher-shell">
+                    <aside class="launcher-sidebar" aria-label="Dashboard">
+                        <div class="dashboard-label">DASHBOARD</div>
+                        <button class="dashboard-item active" type="button" data-view="all">
+                            <i class="fa-solid fa-table-cells-large"></i>
+                            <span>全てのアプリ</span>
+                            <span class="dashboard-count" id="all-app-count">0</span>
+                        </button>
+                        <button class="dashboard-item" type="button" data-view="favorites">
+                            <i class="fa-solid fa-star"></i>
+                            <span>お気に入り</span>
+                            <span class="dashboard-count" id="favorite-app-count">0</span>
+                        </button>
+                    </aside>
+                    <main class="launcher-main">
+                        <div class="launcher-toolbar">
+                            <label class="launcher-search" for="app-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input id="app-search" type="search" placeholder="アプリを検索" autocomplete="off">
+                            </label>
+                            <div class="launcher-tabs" role="tablist" aria-label="アプリカテゴリ">
+                                <button class="launcher-tab active" type="button" data-filter="all" aria-selected="true">すべて</button>
+                                <button class="launcher-tab" type="button" data-filter="favorites" aria-selected="false">よく使う</button>
+                                <button class="launcher-tab" type="button" data-filter="kaientai" aria-selected="false">Kaientai</button>
+                                <button class="launcher-tab" type="button" data-filter="management" aria-selected="false">管理</button>
+                            </div>
+                        </div>
+                        <div id="launcher-sections"></div>
+                        <div class="launcher-empty hidden" id="launcher-empty">該当するアプリがありません。</div>
+                    </main>
+                </div>
+            `;
+
+            searchInput = container.querySelector('#app-search');
+            sectionsRoot = container.querySelector('#launcher-sections');
+            emptyState = container.querySelector('#launcher-empty');
+            allCountEl = container.querySelector('#all-app-count');
+            favoriteCountEl = container.querySelector('#favorite-app-count');
+
+            container.querySelectorAll('.dashboard-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    activeView = item.dataset.view || 'all';
+                    container.querySelectorAll('.dashboard-item').forEach(btn => btn.classList.toggle('active', btn === item));
+                    renderLauncher();
+                });
+            });
+
+            const tabs = Array.from(container.querySelectorAll('.launcher-tab'));
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activeFilter = tab.dataset.filter || 'all';
+                    tabs.forEach(item => {
+                        const isActive = item === tab;
+                        item.classList.toggle('active', isActive);
+                        item.setAttribute('aria-selected', String(isActive));
+                    });
+                    renderLauncher();
+                });
+            });
+
+            searchInput.addEventListener('input', renderLauncher);
+            renderLauncher();
+        }
+
+        function initOptimizedAppLauncher() {
+            const container = document.getElementById('apps-grid');
+            if (!container || container.dataset.launcherReady === 'true') return;
+
+            const sourceCards = Array.from(container.querySelectorAll(':scope > .app-card'));
+            if (sourceCards.length === 0) return;
+
+            const favoritesKey = 'caremax-launcher-favorites';
+            const sectionOrdersKey = 'caremax-launcher-section-orders';
+            const legacyKaientaiOrderKey = 'caremax-launcher-kaientai-order';
+            const defaultFavoriteIds = ['supply', 'tasking', 'kaientai-i'];
+            let activeView = 'all';
+            let searchInput;
+            let sectionsRoot;
+            let emptyState;
+            let draggedState = null;
+
+            function escapeHTML(value) {
+                return String(value).replace(/[&<>"']/g, char => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[char]));
+            }
+
+            function makeAppId(title, href, index) {
+                const normalizedTitle = title.toLowerCase();
+                const normalizedHref = href.toLowerCase();
+                if (/^kaientai-[a-z]$/i.test(title)) return normalizedTitle;
+                if (normalizedHref.includes('supply/')) return 'supply';
+                if (normalizedHref.includes('catalog/')) return 'catalog';
+                if (normalizedHref.includes('jijogu/')) return 'jijogu';
+                if (normalizedHref.includes('tasking-caremax')) return 'tasking';
+                return `app-${index}`;
+            }
+
+            function getCardGroups(title, href) {
+                const groups = [];
+                if (/^Kaientai-[A-Z]$/i.test(title)) groups.push('kaientai');
+                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/')) groups.push('management');
+                if (href.includes('tasking-caremax')) groups.push('management');
+                return Array.from(new Set(groups.length ? groups : ['management']));
+            }
+
+            const apps = sourceCards.map((card, index) => {
+                const title = card.querySelector('.app-title')?.textContent.trim() || '';
+                const desc = card.querySelector('.app-desc')?.textContent.trim() || '';
+                const href = card.getAttribute('href') || '#';
+                const target = card.getAttribute('target') || '';
+                const iconEl = card.querySelector('.app-icon');
+                const badgeType = card.querySelector('#supply-badge') ? 'supply'
+                    : card.querySelector('#jijogu-badge') ? 'jijogu'
+                        : '';
+                const letter = title.match(/^Kaientai-([A-Z])$/i)?.[1]?.toUpperCase() || '';
+                const groups = getCardGroups(title, href);
+                const id = makeAppId(title, href, index);
+                return {
+                    id,
+                    title,
+                    desc,
+                    href,
+                    target,
+                    iconHTML: iconEl ? iconEl.outerHTML : '',
+                    badgeType,
+                    letter,
+                    groups,
+                    search: `${title} ${desc} ${href} ${groups.join(' ')}`.toLowerCase()
+                };
+            });
+
+            function loadFavoriteIds() {
+                try {
+                    const stored = localStorage.getItem(favoritesKey);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (Array.isArray(parsed)) return new Set(parsed.filter(id => apps.some(app => app.id === id)));
+                    }
+                } catch (e) { console.warn('Favorite load error:', e); }
+                return new Set(defaultFavoriteIds.filter(id => apps.some(app => app.id === id)));
+            }
+
+            let favoriteIds = loadFavoriteIds();
+
+            function persistFavoriteIds() {
+                localStorage.setItem(favoritesKey, JSON.stringify(Array.from(favoriteIds)));
+            }
+
+            function loadSectionOrders() {
+                let orders = {};
+                try {
+                    const stored = localStorage.getItem(sectionOrdersKey);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) orders = parsed;
+                    }
+                } catch (e) { console.warn('Section order load error:', e); }
+
+                if (!orders.kaientai) {
+                    try {
+                        const legacy = JSON.parse(localStorage.getItem(legacyKaientaiOrderKey) || '[]');
+                        if (Array.isArray(legacy)) orders.kaientai = legacy;
+                    } catch (e) { }
+                }
+                return orders;
+            }
+
+            function saveSectionOrders(orders) {
+                localStorage.setItem(sectionOrdersKey, JSON.stringify(orders));
+            }
+
+            function getRawSectionApps(sectionId) {
+                if (sectionId === 'favorites') return apps.filter(app => favoriteIds.has(app.id));
+                if (sectionId === 'kaientai') return apps.filter(app => app.groups.includes('kaientai'));
+                if (sectionId === 'management') return apps.filter(app => app.groups.includes('management'));
+                return apps;
+            }
+
+            function getDefaultOrderedApps(sectionId, sectionApps) {
+                if (sectionId === 'kaientai') {
+                    return [...sectionApps].sort((a, b) => a.letter.localeCompare(b.letter));
+                }
+                return [...sectionApps];
+            }
+
+            function getOrderedApps(sectionId, sectionApps) {
+                const defaults = getDefaultOrderedApps(sectionId, sectionApps);
+                const orders = loadSectionOrders();
+                const savedOrder = Array.isArray(orders[sectionId])
+                    ? orders[sectionId].filter(id => defaults.some(app => app.id === id))
+                    : [];
+                const ordered = savedOrder
+                    .map(id => defaults.find(app => app.id === id))
+                    .filter(Boolean);
+                const missing = defaults.filter(app => !savedOrder.includes(app.id));
+                return [...ordered, ...missing];
+            }
+
+            function saveSectionOrder(sectionId, orderedIds) {
+                const orders = loadSectionOrders();
+                orders[sectionId] = orderedIds;
+                saveSectionOrders(orders);
+            }
+
+            function getCurrentSections() {
+                const favoriteTitle = activeView === 'favorites' ? 'お気に入り' : 'よく使う';
+                const sections = {
+                    favorites: {
+                        id: 'favorites',
+                        title: favoriteTitle,
+                        meta: activeView === 'favorites' ? `${favoriteIds.size}件` : 'お気に入り登録したアプリ',
+                        apps: getRawSectionApps('favorites')
+                    },
+                    kaientai: {
+                        id: 'kaientai',
+                        title: 'Kaientai シリーズ',
+                        meta: 'ドラッグで並び替え',
+                        apps: getRawSectionApps('kaientai')
+                    },
+                    management: {
+                        id: 'management',
+                        title: '管理アプリ',
+                        meta: '社内業務ツール',
+                        apps: getRawSectionApps('management')
+                    }
+                };
+
+                if (activeView === 'all') return [sections.favorites, sections.kaientai, sections.management];
+                if (activeView === 'favorites' || activeView === 'frequent') return [sections.favorites];
+                if (activeView === 'kaientai') return [sections.kaientai];
+                if (activeView === 'management') return [sections.management];
+                return [sections.favorites, sections.kaientai, sections.management];
+            }
+
+            function filterApps(sectionApps) {
+                const query = searchInput.value.trim().toLowerCase();
+                return sectionApps.filter(app => !query || app.search.includes(query));
+            }
+
+            function createAppCard(app, sectionId) {
+                const card = document.createElement('article');
+                const isFavorite = favoriteIds.has(app.id);
+                card.className = `app-card${isFavorite ? ' is-favorite' : ''}`;
+                card.dataset.appId = app.id;
+                card.dataset.sectionId = sectionId;
+                card.dataset.groups = app.groups.join(' ');
+                card.dataset.search = app.search;
+                card.draggable = true;
+
+                card.addEventListener('dragstart', e => {
+                    draggedState = { sectionId, appId: app.id };
+                    card.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', app.id);
+                });
+
+                card.addEventListener('dragend', () => {
+                    draggedState = null;
+                    card.classList.remove('dragging');
+                });
+
+                card.addEventListener('dragover', e => e.preventDefault());
+                card.addEventListener('drop', e => {
+                    e.preventDefault();
+                    if (!draggedState || draggedState.sectionId !== sectionId) return;
+                    reorderSection(sectionId, draggedState.appId, app.id, e);
+                });
+
+                const favoriteBtn = document.createElement('button');
+                favoriteBtn.className = `favorite-btn${isFavorite ? ' active' : ''}`;
+                favoriteBtn.type = 'button';
+                favoriteBtn.setAttribute('aria-label', `${app.title}をお気に入り${isFavorite ? 'から外す' : 'に追加'}`);
+                favoriteBtn.setAttribute('aria-pressed', String(isFavorite));
+                favoriteBtn.innerHTML = '<i class="fa-solid fa-star"></i>';
+                favoriteBtn.addEventListener('click', e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (favoriteIds.has(app.id)) favoriteIds.delete(app.id);
+                    else favoriteIds.add(app.id);
+                    persistFavoriteIds();
+                    renderLauncher();
+                });
+
+                const link = document.createElement('a');
+                link.className = 'app-card-link';
+                link.href = app.href;
+                if (app.target) {
+                    link.target = app.target;
+                    link.rel = 'noopener noreferrer';
+                }
+                link.innerHTML = `
+                    ${app.iconHTML}
+                    <div class="app-copy">
+                        <h2 class="app-title">${escapeHTML(app.title)}</h2>
+                        <p class="app-desc">${escapeHTML(app.desc)}</p>
+                    </div>
+                    <span class="app-card-action">
+                        <i class="fa-solid ${app.target === '_blank' ? 'fa-arrow-up-right-from-square' : 'fa-chevron-right'}"></i>
+                    </span>
+                `;
+
+                if (app.badgeType) {
+                    link.querySelectorAll('.notification-badge').forEach(badge => {
+                        badge.removeAttribute('id');
+                        badge.dataset.badgeType = app.badgeType;
+                    });
+                }
+
+                card.appendChild(favoriteBtn);
+                card.appendChild(link);
+                return card;
+            }
+
+            function applyBadgeCounts() {
+                Object.entries(launcherBadgeCounts).forEach(([type, count]) => {
+                    setNotificationBadge(type, count);
+                });
+            }
+
+            function reorderSection(sectionId, sourceId, targetId, event) {
+                if (!sourceId || !targetId || sourceId === targetId) return;
+                const orderedIds = getOrderedApps(sectionId, getRawSectionApps(sectionId)).map(app => app.id);
+                const fromIndex = orderedIds.indexOf(sourceId);
+                if (fromIndex === -1 || !orderedIds.includes(targetId)) return;
+
+                orderedIds.splice(fromIndex, 1);
+                const targetCard = event.currentTarget;
+                const rect = targetCard.getBoundingClientRect();
+                const insertAfter = event.clientY > rect.top + rect.height / 2 || event.clientX > rect.left + rect.width / 2;
+                const targetIndex = orderedIds.indexOf(targetId);
+                orderedIds.splice(insertAfter ? targetIndex + 1 : targetIndex, 0, sourceId);
+                saveSectionOrder(sectionId, orderedIds);
+                renderLauncher();
+            }
+
+            function updateDashboardCounts() {
+                const counts = {
+                    all: apps.length,
+                    favorites: favoriteIds.size,
+                    frequent: favoriteIds.size,
+                    kaientai: getRawSectionApps('kaientai').length,
+                    management: getRawSectionApps('management').length
+                };
+                container.querySelectorAll('[data-count-id]').forEach(el => {
+                    el.textContent = counts[el.dataset.countId] ?? 0;
+                });
+            }
+
+            function renderSection(section) {
+                const orderedApps = getOrderedApps(section.id, section.apps);
+                const sectionApps = filterApps(orderedApps);
+                if (sectionApps.length === 0) return 0;
+
+                const sectionEl = document.createElement('section');
+                sectionEl.className = 'launcher-section';
+                sectionEl.dataset.section = section.id;
+                sectionEl.innerHTML = `
+                    <div class="launcher-section-header">
+                        <h2 class="launcher-section-title">${section.title}</h2>
+                        <span class="launcher-section-meta">${section.meta}</span>
+                    </div>
+                    <div class="launcher-section-grid"></div>
+                `;
+
+                const grid = sectionEl.querySelector('.launcher-section-grid');
+                sectionApps.forEach(app => grid.appendChild(createAppCard(app, section.id)));
+                sectionsRoot.appendChild(sectionEl);
+                return sectionApps.length;
+            }
+
+            function renderLauncher() {
+                sectionsRoot.innerHTML = '';
+                updateDashboardCounts();
+
+                let totalVisible = 0;
+                getCurrentSections().forEach(section => {
+                    totalVisible += renderSection(section);
+                });
+
+                emptyState.classList.toggle('hidden', totalVisible !== 0);
+                applyBadgeCounts();
+            }
+
+            container.innerHTML = '';
+            container.dataset.launcherReady = 'true';
+            container.innerHTML = `
+                <div class="launcher-shell">
+                    <aside class="launcher-sidebar" aria-label="Dashboard">
+                        <div class="dashboard-label">DASHBOARD</div>
+                        <button class="dashboard-item active" type="button" data-view="all">
+                            <i class="fa-solid fa-house"></i>
+                            <span>全てのアプリ</span>
+                            <span class="dashboard-count" data-count-id="all">0</span>
+                        </button>
+                        <button class="dashboard-item" type="button" data-view="favorites">
+                            <i class="fa-solid fa-star"></i>
+                            <span>お気に入り</span>
+                            <span class="dashboard-count" data-count-id="favorites">0</span>
+                        </button>
+                        <div class="dashboard-divider"></div>
+                        <div class="dashboard-section-label">FILTER</div>
+                        <button class="dashboard-item" type="button" data-view="frequent">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>よく使う</span>
+                            <span class="dashboard-count" data-count-id="frequent">0</span>
+                        </button>
+                        <button class="dashboard-item" type="button" data-view="kaientai">
+                            <i class="fa-solid fa-flask"></i>
+                            <span>Kaientai</span>
+                            <span class="dashboard-count" data-count-id="kaientai">0</span>
+                        </button>
+                        <button class="dashboard-item" type="button" data-view="management">
+                            <i class="fa-solid fa-briefcase"></i>
+                            <span>管理アプリ</span>
+                            <span class="dashboard-count" data-count-id="management">0</span>
+                        </button>
+                    </aside>
+                    <main class="launcher-main">
+                        <div class="launcher-toolbar">
+                            <label class="launcher-search" for="app-search">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input id="app-search" type="search" placeholder="アプリを検索" autocomplete="off">
+                            </label>
+                        </div>
+                        <div id="launcher-sections"></div>
+                        <div class="launcher-empty hidden" id="launcher-empty">該当するアプリがありません。</div>
+                    </main>
+                </div>
+            `;
+
+            searchInput = container.querySelector('#app-search');
+            sectionsRoot = container.querySelector('#launcher-sections');
+            emptyState = container.querySelector('#launcher-empty');
+
+            container.querySelectorAll('.dashboard-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    activeView = item.dataset.view || 'all';
+                    container.querySelectorAll('.dashboard-item').forEach(btn => btn.classList.toggle('active', btn === item));
+                    renderLauncher();
+                });
+            });
+
+            searchInput.addEventListener('input', renderLauncher);
+            renderLauncher();
+        }
+
+        initOptimizedAppLauncher();
 
         // === Easter Egg: Kaientai A-Z Alphabet Checker ===
         (function () {
@@ -946,6 +2196,7 @@
             const colorMap = {
                 'C': 'linear-gradient(135deg, #22c7ee, #0ea5e9)',
                 'D': 'linear-gradient(135deg, #ec4899, #be185d)',
+                'I': 'linear-gradient(135deg, #6573ff, #9b5cf6)',
                 'M': 'linear-gradient(135deg, #1e40af, #0f172a)',
                 'P': 'linear-gradient(135deg, #06b6d4, #2563eb)',
                 'S': 'linear-gradient(135deg, #1f1f1f, #5a5a5a)',
@@ -958,9 +2209,21 @@
 
                 // Scan DOM for Kaientai apps
                 const releasedMap = {};
-                const titles = document.querySelectorAll('.app-title');
-                titles.forEach(el => {
-                    const text = el.textContent.trim();
+                const launcherApps = Array.isArray(window.caremaxLauncherApps) ? window.caremaxLauncherApps : null;
+
+                if (launcherApps) {
+                    launcherApps.forEach(app => {
+                        const text = app.title;
+                        const match = text.match(/^Kaientai-([A-Z])$/i);
+                        if (match) {
+                            const letter = match[1].toUpperCase();
+                            releasedMap[letter] = { name: text, icon: app.iconHTML || '' };
+                        }
+                    });
+                } else {
+                    const titles = document.querySelectorAll('.app-title');
+                    titles.forEach(el => {
+                        const text = el.textContent.trim();
                     const match = text.match(/^Kaientai-([A-Z])$/i);
                     if (match) {
                         const letter = match[1].toUpperCase();
@@ -976,7 +2239,8 @@
                         }
                         releasedMap[letter] = { name: text, icon: iconHTML };
                     }
-                });
+                    });
+                }
 
                 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
                 const releasedCount = Object.keys(releasedMap).length;
