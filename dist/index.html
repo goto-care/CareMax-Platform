@@ -1358,18 +1358,20 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ログイン中...';
             if (demoBtn) demoBtn.classList.add('hidden');
 
-            // Set persistence to LOCAL (default, but explicit is safer)
-            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-                .then(() => {
-                    return auth.signInWithPopup(provider);
-                })
+            // Open directly during the tap event so Safari keeps user activation.
+            // Firebase already defaults to LOCAL persistence in web browsers.
+            auth.signInWithPopup(provider)
                 .then((result) => {
                     console.log('Signed in:', result.user.displayName);
                     // Auth state listener will handle the UI update
                 })
                 .catch((error) => {
                     console.error('Sign in error:', error);
-                    alert('ログインに失敗しました: ' + error.message);
+                    if (error.code === 'auth/popup-blocked') {
+                        alert('ログイン画面がブラウザーにブロックされました。Safariでこのサイトのポップアップを許可してから、もう一度ログインしてください。アプリ内ブラウザーで開いている場合は、Safariで開き直してください。');
+                    } else {
+                        alert('ログインに失敗しました: ' + error.message);
+                    }
                     resetLoginButton();
                 });
         }
