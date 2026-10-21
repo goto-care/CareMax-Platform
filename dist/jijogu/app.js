@@ -31,8 +31,7 @@ try {
 
 const state = {
     records: [],
-    statusFilter: '',
-    setFilter: ''
+    statusFilter: ''
 };
 
 let editingId = null;
@@ -75,8 +74,8 @@ function loadLocalData() {
     const saved = localStorage.getItem('caremax-jijogu');
     if (saved) {
         state.records = JSON.parse(saved).map(stripNotifyEmail);
-        debounceRender();
     }
+    debounceRender();
 }
 
 // Sync Helper
@@ -98,7 +97,7 @@ async function syncRecord(action, data) {
     if (db) {
         try {
             if (action === 'save') {
-                await db.collection('jijogu_records').doc(String(payload.id)).set(payload);
+                await db.collection('jijogu_records').doc(String(payload.id)).set(payload, { merge: true });
             } else if (action === 'delete') {
                 await db.collection('jijogu_records').doc(String(payload)).delete();
             }
@@ -112,18 +111,10 @@ async function syncRecord(action, data) {
 // Filters
 function setFilter(status) {
     state.statusFilter = status;
-    document.querySelectorAll('.filter-section:first-of-type .filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.filter-section')[0].querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
     const id = status === '' ? 'filter-all' :
         status === '発送待' ? 'filter-waiting' :
             status === '貸出中' ? 'filter-lending' : 'filter-returned';
-    document.getElementById(id).classList.add('active');
-    debounceRender();
-}
-
-function setSetFilter(setName) {
-    state.setFilter = setName;
-    document.querySelectorAll('.filter-section:nth-of-type(2) .filter-btn').forEach(btn => btn.classList.remove('active'));
-    const id = setName === '' ? 'set-all' : 'set-' + setName.toLowerCase();
     document.getElementById(id).classList.add('active');
     debounceRender();
 }
@@ -136,7 +127,7 @@ function openModal(id = null) {
     if (id) {
         const record = state.records.find(r => r.id === id);
         if (record) {
-            document.getElementById('modal-title').textContent = '編集';
+            document.getElementById('modal-title').textContent = '案件の詳細・編集';
             document.getElementById('f-management-no').value = 'No.' + (record.managementNo || '-');
             document.getElementById('f-customer-code').value = record.customerCode || '';
             document.getElementById('f-customer-name').value = record.customerName || '';
@@ -146,6 +137,7 @@ function openModal(id = null) {
             document.getElementById('f-sales-staff').value = record.salesStaff || '';
             document.getElementById('f-request-date').value = record.requestDate || '';
             document.getElementById('f-usage-date').value = record.usageDate || '';
+            document.getElementById('f-delivery-date').value = record.deliveryDate || '';
             document.getElementById('f-ship-date').value = record.shipDate || '';
             document.getElementById('f-expected-return').value = record.expectedReturn || '';
             document.getElementById('f-return-date').value = record.returnDate || '';
@@ -166,6 +158,7 @@ function openModal(id = null) {
         document.getElementById('f-sales-staff').value = '';
         document.getElementById('f-request-date').value = new Date().toISOString().split('T')[0];
         document.getElementById('f-usage-date').value = '';
+        document.getElementById('f-delivery-date').value = '';
         document.getElementById('f-ship-date').value = '';
         document.getElementById('f-expected-return').value = '';
         document.getElementById('f-return-date').value = '';
@@ -175,6 +168,7 @@ function openModal(id = null) {
     }
 
     document.getElementById('record-modal').classList.remove('hidden');
+    updateDeliveryWarning();
 }
 
 function closeModal() {
@@ -192,6 +186,7 @@ function saveRecord() {
         salesStaff: document.getElementById('f-sales-staff').value.trim(),
         requestDate: document.getElementById('f-request-date').value,
         usageDate: document.getElementById('f-usage-date').value,
+        deliveryDate: document.getElementById('f-delivery-date').value,
         shipDate: document.getElementById('f-ship-date').value,
         expectedReturn: document.getElementById('f-expected-return').value,
         returnDate: document.getElementById('f-return-date').value,
@@ -203,6 +198,9 @@ function saveRecord() {
         alert('得意先コードと得意先名を入力してください');
         return;
     }
+
+    const deliveryWarning = updateDeliveryWarning();
+    if (deliveryWarning && !confirm(deliveryWarning.message + '\n\nこの日程で登録しますか？')) return;
 
     if (editingId) {
         const existing = state.records.find(r => r.id === editingId) || {};
@@ -229,72 +227,12 @@ function deleteRecord() {
     closeModal();
 }
 
-// Render
-function render() {
-    let filtered = [...state.records];
-
-    if (state.statusFilter) {
-        filtered = filtered.filter(r => r.status === state.statusFilter);
-    }
-    if (state.setFilter) {
-        filtered = filtered.filter(r => r.setName === state.setFilter);
-    }
-
-    // Sort by createdAt descending (newest first), fallback to id for older records
-    filtered.sort((a, b) => {
-        const aTime = a.createdAt ? new Date(a.createdAt) : new Date(a.id);
-        const bTime = b.createdAt ? new Date(b.createdAt) : new Date(b.id);
-        return bTime - aTime;
-    });
-
-    const tableBody = document.getElementById('records-table');
-    tableBody.innerHTML = '';
-
-    filtered.forEach(record => {
-        const statusClass = record.status === '発送待' ? 'badge-waiting' :
-            record.status === '貸出中' ? 'badge-lending' : 'badge-returned';
-
-        // Check if completed (has lastCheck date)
-        const isCompleted = !!record.lastCheck;
-
-        const row = document.createElement('tr');
-        row.className = `clickable-row ${isCompleted ? 'completed-row' : ''}`;
-        row.style.position = 'relative';
-
-        // Click on row to open edit modal (except for action button cell)
-        row.onclick = (e) => {
-            if (!e.target.closest('.action-btn')) {
-                openModal(record.id);
-            }
-        };
-
-        row.innerHTML = `
-            <td><strong>No.${record.managementNo || '-'}</strong></td>
-            <td>${record.customerCode}</td>
-            <td>${record.customerName}</td>
-            <td><span class="status-badge ${statusClass}">${record.status}</span></td>
-            <td>${record.setName}</td>
-            <td>${record.supportStaff || '-'}</td>
-            <td>${record.salesStaff || '-'}</td>
-            <td>${record.requestDate || '-'}</td>
-            <td>${record.usageDate || '-'}</td>
-            <td>${record.shipDate || '-'}</td>
-            <td>${record.expectedReturn || '-'}</td>
-            <td>${record.returnDate || '-'}</td>
-            <td>${record.lastCheck || '-'}</td>
-            <td>${record.notes ? '<i class="fa-solid fa-comment-dots" style="color:var(--text-muted); font-size:1.1rem;" title="備考あり"></i> <span style="font-size:0.7rem; color:var(--text-muted);">あり</span>' : ''}</td>
-            <td>
-                <button class="action-btn" onclick="openModal(${record.id}); event.stopPropagation();"><i class="fa-solid fa-pen"></i></button>
-            </td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
+// Board rendering is defined in board.js.
 
 // Export CSV
 // Export CSV
 function exportCSV() {
-    const headers = ['得意先コード', '得意先名', '状況', 'セット名', '対応担当', '営業担当', '依頼日', '使用日', '発送日', '返却予定日', '返却日', '最終チェック日', '備考'];
+    const headers = ['得意先コード', '得意先名', '状況', 'セット名', 'CMC対応担当', 'CMC営業担当', '依頼日', '使用日', '納品希望日', '発送日', '返却予定日', '返却日', '最終チェック日', '備考'];
     let csv = '\ufeff' + headers.join(',') + '\n';
 
     const escapeCSV = (field) => {
@@ -316,6 +254,7 @@ function exportCSV() {
             escapeCSV(r.salesStaff),
             escapeCSV(r.requestDate),
             escapeCSV(r.usageDate),
+            escapeCSV(r.deliveryDate),
             escapeCSV(r.shipDate),
             escapeCSV(r.expectedReturn),
             escapeCSV(r.returnDate),
@@ -336,7 +275,6 @@ function exportCSV() {
 // Global
 // Global assignments
 window.setFilter = setFilter;
-window.setSetFilter = setSetFilter;
 window.openModal = openModal;
 window.closeModal = closeModal;
 window.saveRecord = saveRecord;

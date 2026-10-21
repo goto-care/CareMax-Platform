@@ -470,13 +470,14 @@
             cursor: pointer;
         }
     </style>
+    <link rel="stylesheet" href="board.css">
 </head>
 
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <a href="../index.html" class="logo-section">
-                <div class="logo-icon"><i class="fa-solid fa-wheelchair"></i></div>
+                <div class="logo-icon"><img src="assistive-dining.svg" alt="" width="52" height="44"></div>
                 <span class="logo-text">自助具管理</span>
             </a>
 
@@ -496,13 +497,6 @@
                 </button>
             </div>
 
-            <div class="filter-section">
-                <div class="filter-label">セット名</div>
-                <button class="filter-btn" onclick="setSetFilter('')" id="set-all">全てのセット</button>
-                <button class="filter-btn" onclick="setSetFilter('X')" id="set-x">セット X</button>
-                <button class="filter-btn" onclick="setSetFilter('Y')" id="set-y">セット Y</button>
-                <button class="filter-btn" onclick="setSetFilter('Z')" id="set-z">セット Z</button>
-            </div>
         </aside>
 
         <main class="main-content">
@@ -518,105 +512,90 @@
                 </div>
             </div>
 
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>得意先コード</th>
-                            <th>得意先名</th>
-                            <th>状況</th>
-                            <th>セット名</th>
-                            <th>対応担当</th>
-                            <th>営業担当</th>
-                            <th>依頼日</th>
-                            <th>使用日</th>
-                            <th>発送日</th>
-                            <th>返却予定日</th>
-                            <th>返却日</th>
-                            <th>最終チェック日</th>
-                            <th>備考</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="records-table"></tbody>
-                </table>
-            </div>
+            <div class="board-toolbar"><p>セットごとの状況と予定を確認できます。案件を選ぶと詳細を表示します。</p><span id="board-count" role="status" aria-live="polite"></span></div>
+            <div id="sets-board" class="sets-board" aria-label="セット別の案件一覧"></div>
         </main>
     </div>
 
     <!-- Add/Edit Modal -->
-    <div id="record-modal" class="modal hidden">
-        <div class="modal-content">
+    <div id="record-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-content" tabindex="-1">
             <div class="modal-header">
-                <h2 id="modal-title">新規登録</h2>
-                <button class="close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+                <div><h2 id="modal-title">新規登録</h2><p class="modal-description">案件の情報と貸出・返却の予定を確認できます</p></div>
+                <button class="close-btn" onclick="closeModal()" aria-label="閉じる"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>管理番号</label>
+            <div class="modal-body" id="modal-body">
+<section class="dialog-section" aria-labelledby="dialog-section-0"><div class="section-heading"><h3 id="dialog-section-0">基本情報</h3><p>セット・状況と得意先</p></div><div class="dialog-fields basic-fields"><div class="form-group">
+                    <label for="f-management-no">管理番号</label>
                     <input type="text" id="f-management-no" readonly style="background: #f1f5f9; cursor: not-allowed;">
                 </div>
-                <div class="form-group">
-                    <label>得意先コード</label>
-                    <input type="text" id="f-customer-code" placeholder="例: C001">
+<div class="form-group">
+                    <label for="f-set-name">セット名</label>
+                    <select id="f-set-name" onchange="updateDeliveryWarning()">
+                        <option value="X">X</option>
+                        <option value="Y">Y</option>
+                        <option value="Z">Z</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label>得意先名</label>
-                    <input type="text" id="f-customer-name" placeholder="例: 株式会社ABC">
-                </div>
-                <div class="form-group">
-                    <label>状況</label>
+<div class="form-group">
+                    <label for="f-status">状況</label>
                     <select id="f-status">
                         <option value="発送待">発送待</option>
                         <option value="貸出中">貸出中</option>
                         <option value="返却済">返却済</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>セット名</label>
-                    <select id="f-set-name">
-                        <option value="X">X</option>
-                        <option value="Y">Y</option>
-                        <option value="Z">Z</option>
-                    </select>
+<div class="form-group">
+                    <label for="f-customer-code">得意先コード</label>
+                    <input type="text" id="f-customer-code" placeholder="例: C001">
                 </div>
-                <div class="form-group">
-                    <label>対応担当</label>
-                    <input type="text" id="f-support-staff" placeholder="例: 田中">
-                </div>
-                <div class="form-group">
-                    <label>営業担当</label>
-                    <input type="text" id="f-sales-staff" placeholder="例: 佐藤">
-                </div>
-                <div class="form-group">
-                    <label>依頼日</label>
+<div class="form-group field-wide">
+                    <label for="f-customer-name">得意先名</label>
+                    <input type="text" id="f-customer-name" placeholder="例: 株式会社ABC">
+                </div></div></section>
+<section class="dialog-section" aria-labelledby="dialog-section-1"><div class="section-heading"><h3 id="dialog-section-1">日程</h3><p>納品から返却までの予定・実績</p></div><div class="dialog-fields schedule-fields"><div class="form-group">
+                    <label for="f-request-date">依頼日</label>
                     <input type="date" id="f-request-date">
                 </div>
-                <div class="form-group">
-                    <label>使用日</label>
+<div class="form-group field-highlight">
+                    <label for="f-delivery-date">納品希望日</label>
+                    <input type="date" id="f-delivery-date" oninput="updateDeliveryWarning()" onchange="updateDeliveryWarning()" aria-describedby="delivery-rule delivery-warning">
+                </div>
+<div class="form-group">
+                    <label for="f-usage-date">使用日</label>
                     <input type="date" id="f-usage-date">
                 </div>
-                <div class="form-group">
-                    <label>発送日</label>
-                    <input type="date" id="f-ship-date">
-                </div>
-                <div class="form-group">
-                    <label>返却予定日</label>
+<div class="form-group field-highlight">
+                    <label for="f-expected-return">返却予定日</label>
                     <input type="date" id="f-expected-return">
                 </div>
-                <div class="form-group">
-                    <label>返却日</label>
+<div class="form-group">
+                    <label for="f-ship-date">発送日</label>
+                    <input type="date" id="f-ship-date">
+                </div>
+<div class="form-group">
+                    <label for="f-return-date">返却日</label>
                     <input type="date" id="f-return-date">
                 </div>
-                <div class="form-group">
-                    <label>最終チェック日</label>
+<div class="form-group">
+                    <label for="f-last-check">最終チェック日</label>
                     <input type="date" id="f-last-check">
                 </div>
-                <div class="form-group full">
-                    <label>&#x5099;&#x8003;</label>
-                    <textarea id="f-notes" placeholder="&#x5099;&#x8003;&#x3092;&#x5165;&#x529b;..."></textarea>
+                <p class="delivery-rule" id="delivery-rule">新規登録時は、同じセットの最新案件の返却予定日から納品希望日までが3営業日以内の場合に警告します（土日祝を除く）。</p>
+                <div class="delivery-warning hidden" id="delivery-warning" role="alert" aria-live="polite"></div>
+                </div></section>
+<section class="dialog-section" aria-labelledby="dialog-section-2"><div class="section-heading"><h3 id="dialog-section-2">担当者・備考</h3></div><div class="dialog-fields staff-fields"><div class="form-group">
+                    <label for="f-support-staff">CMC対応担当</label>
+                    <input type="text" id="f-support-staff" placeholder="例: 田中">
                 </div>
+<div class="form-group">
+                    <label for="f-sales-staff">CMC営業担当</label>
+                    <input type="text" id="f-sales-staff" placeholder="例: 佐藤">
+                </div>
+<div class="form-group field-wide">
+                    <label for="f-notes">&#x5099;&#x8003;</label>
+                    <textarea id="f-notes" placeholder="&#x5099;&#x8003;&#x3092;&#x5165;&#x529b;..."></textarea>
+                </div></div></section>
             </div>
             <div class="modal-actions">
                 <button class="btn-delete hidden" id="delete-btn" onclick="deleteRecord()">
@@ -633,6 +612,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="board.js"></script>
+    <script src="holidays-data.js"></script>
+    <script src="business-days.js"></script>
     <script src="app.js"></script>
 </body>
 
