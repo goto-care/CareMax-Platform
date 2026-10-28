@@ -809,6 +809,219 @@
             display: none !important;
         }
 
+        /* === Spreadsheet Links === */
+        .launcher-section-tools {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sheet-add-btn {
+            align-items: center;
+            background: var(--accent-secondary);
+            border: none;
+            border-radius: 999px;
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            font: inherit;
+            font-size: 0.84rem;
+            font-weight: 700;
+            gap: 6px;
+            padding: 6px 14px;
+        }
+
+        .sheet-add-btn:hover {
+            filter: brightness(1.05);
+        }
+
+        .sheet-edit-btn {
+            align-items: center;
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid rgba(15, 23, 42, 0.12);
+            border-radius: 50%;
+            color: #94a3b8;
+            cursor: pointer;
+            display: inline-flex;
+            font-size: 0.75rem;
+            height: 28px;
+            justify-content: center;
+            padding: 0;
+            position: absolute;
+            right: 52px;
+            top: 14px;
+            width: 28px;
+            z-index: 4;
+        }
+
+        .sheet-edit-btn:hover {
+            color: var(--text-main);
+        }
+
+        .launcher-section[data-section="favorites"] .sheet-edit-btn {
+            display: none;
+        }
+
+        .sheet-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .sheet-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .sheet-modal {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+            transform: translateY(12px);
+            transition: transform 0.2s ease;
+        }
+
+        .sheet-overlay.active .sheet-modal {
+            transform: translateY(0);
+        }
+
+        .sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .sheet-header h2 {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sheet-header h2 i {
+            color: var(--accent-secondary);
+        }
+
+        .sheet-close {
+            background: #f1f5f9;
+            border: none;
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sheet-close:hover {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .sheet-field {
+            display: block;
+            margin-bottom: 14px;
+        }
+
+        .sheet-field span {
+            display: block;
+            color: var(--text-main);
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .sheet-field em {
+            color: var(--accent-danger);
+            font-size: 0.75rem;
+            font-style: normal;
+            margin-left: 4px;
+        }
+
+        .sheet-field input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            border-radius: 10px;
+            color: var(--text-main);
+            font: inherit;
+            outline: none;
+            padding: 0 12px;
+        }
+
+        .sheet-field input:focus {
+            border-color: rgba(66, 133, 244, 0.65);
+        }
+
+        .sheet-error {
+            color: var(--accent-danger);
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .sheet-error.hidden {
+            display: none;
+        }
+
+        .sheet-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 6px;
+        }
+
+        .sheet-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-main);
+            cursor: pointer;
+            font: inherit;
+            font-weight: 600;
+            padding: 10px 18px;
+        }
+
+        .sheet-btn.primary {
+            background: var(--accent-primary);
+            color: #fff;
+        }
+
+        .sheet-btn.danger {
+            background: #fef2f2;
+            color: var(--accent-danger);
+            margin-right: auto;
+        }
+
+        .sheet-btn.hidden {
+            display: none;
+        }
+
+        .sheet-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
         /* === Easter Egg: Kaientai A-Z Checker === */
         .az-overlay {
             position: fixed;
@@ -1187,15 +1400,9 @@
             <p class="app-desc">請求書作成、管理アプリ。</p>
         </a>
 
-        <a href="https://docs.google.com/spreadsheets/d/1eIXkpEQCDALlfNJatq-IyOttyzqWlkm-IVgS6Sb2Z84/edit?gid=742676814#gid=742676814" class="app-card" target="_blank">
-            <div class="app-icon logo-tile">
-                <img src="/sales-planning-spreadsheet.png" alt="営業・企画共有スプレッドシート icon">
-            </div>
-            <h2 class="app-title">営業・企画共有スプレッドシート</h2>
-            <p class="app-desc">営業・企画の共有シートを開きます。</p>
-        </a>
-
-        <a href="https://serplix.jp/login" class="app-card" target="_blank">
+        <!-- スプレッドシートは Firestore の spreadsheetLinks で管理（画面から追加・編集） -->
+        <!-- data-legacy-index: 旧スプレッドシートカード削除後もお気に入り等のIDを変えないため -->
+        <a href="https://serplix.jp/login" class="app-card" target="_blank" data-legacy-index="15">
             <div class="app-icon logo-tile">
                 <img src="/fax-send.jpeg" alt="FAX大量送信 icon">
             </div>
@@ -1203,15 +1410,7 @@
             <p class="app-desc">FAXの一括送信サービスへアクセスします。</p>
         </a>
 
-        <a href="https://docs.google.com/spreadsheets/d/1rT0QeEvzlc3-5P9gI5RxnkwaTS1RIhb2sCXbEM8kX1U/edit?gid=1769298956#gid=1769298956" class="app-card" target="_blank">
-            <div class="app-icon logo-tile">
-                <img src="/project-management-sheet.png" alt="企画部プロジェクト管理シート icon">
-            </div>
-            <h2 class="app-title">企画部プロジェクト管理シート</h2>
-            <p class="app-desc">企画部のプロジェクト管理シートを開きます。</p>
-        </a>
-
-        <a href="https://ruby-innovation-474.lightning.force.com/lightning/page/home" class="app-card" target="_blank">
+        <a href="https://ruby-innovation-474.lightning.force.com/lightning/page/home" class="app-card" target="_blank" data-legacy-index="17">
             <div class="app-icon logo-tile">
                 <img src="/salesforce.png" alt="salesforce icon">
             </div>
@@ -1286,6 +1485,34 @@
             <h2 class="app-title">旧台割くん</h2>
             <p class="app-desc">旧版のカタログ台割制作アプリ。</p>
         </a>
+    </div>
+
+    <!-- Spreadsheet Link Editor -->
+    <div class="sheet-overlay" id="sheet-overlay" aria-hidden="true">
+        <form class="sheet-modal" id="sheet-form" role="dialog" aria-modal="true" aria-labelledby="sheet-modal-title" novalidate>
+            <div class="sheet-header">
+                <h2 id="sheet-modal-title"><i class="fa-solid fa-table"></i> <span>スプレッドシートを追加</span></h2>
+                <button class="sheet-close" id="sheet-close" type="button" aria-label="閉じる"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <label class="sheet-field">
+                <span>表示名 <em>必須</em></span>
+                <input id="sheet-title" type="text" maxlength="60" autocomplete="off" required>
+            </label>
+            <label class="sheet-field">
+                <span>URL <em>必須</em></span>
+                <input id="sheet-url" type="url" placeholder="https://docs.google.com/spreadsheets/..." autocomplete="off" required>
+            </label>
+            <label class="sheet-field">
+                <span>説明</span>
+                <input id="sheet-desc" type="text" maxlength="80" autocomplete="off">
+            </label>
+            <p class="sheet-error hidden" id="sheet-error"></p>
+            <div class="sheet-actions">
+                <button class="sheet-btn danger hidden" id="sheet-delete" type="button"><i class="fa-solid fa-trash-can"></i> 削除</button>
+                <button class="sheet-btn" id="sheet-cancel" type="button">キャンセル</button>
+                <button class="sheet-btn primary" id="sheet-save" type="submit">保存</button>
+            </div>
+        </form>
     </div>
 
     <!-- Easter Egg: Kaientai A-Z Checker Modal -->
@@ -1902,6 +2129,23 @@
             const sectionOrdersKey = 'caremax-launcher-section-orders';
             const legacyKaientaiOrderKey = 'caremax-launcher-kaientai-order';
             const defaultFavoriteIds = ['supply', 'tasking', 'kaientai-i'];
+            // 旧スプレッドシートカード（app-14/app-16）のお気に入りを Firestore 版へ引き継ぐ
+            const legacySheetIds = { 'app-14': 'sheet-sales-planning', 'app-16': 'sheet-project-management' };
+            const sheetCollection = db.collection('spreadsheetLinks');
+            const sheetSeedDocs = {
+                'sales-planning': {
+                    title: '営業・企画共有スプレッドシート',
+                    url: 'https://docs.google.com/spreadsheets/d/1eIXkpEQCDALlfNJatq-IyOttyzqWlkm-IVgS6Sb2Z84/edit?gid=742676814#gid=742676814',
+                    desc: '営業・企画の共有シートを開きます。'
+                },
+                'project-management': {
+                    title: '企画部プロジェクト管理シート',
+                    url: 'https://docs.google.com/spreadsheets/d/1rT0QeEvzlc3-5P9gI5RxnkwaTS1RIhb2sCXbEM8kX1U/edit?gid=1769298956#gid=1769298956',
+                    desc: '企画部のプロジェクト管理シートを開きます。'
+                }
+            };
+            let sheetApps = [];
+            let unsubscribeSheets = null;
             let activeView = 'all';
             let searchInput;
             let sectionsRoot;
@@ -1936,7 +2180,10 @@
                 return Array.from(new Set(groups.length ? groups : ['management']));
             }
 
-            const apps = sourceCards.map((card, index) => {
+            let nextIndex = 0;
+            const apps = sourceCards.map(card => {
+                const index = card.dataset.legacyIndex ? Number(card.dataset.legacyIndex) : nextIndex;
+                nextIndex = index + 1;
                 const title = card.querySelector('.app-title')?.textContent.trim() || '';
                 const desc = card.querySelector('.app-desc')?.textContent.trim() || '';
                 const href = card.getAttribute('href') || '#';
@@ -1963,12 +2210,19 @@
             });
             window.caremaxLauncherApps = apps;
 
+            function getAllApps() {
+                return [...apps, ...sheetApps];
+            }
+
             function loadFavoriteIds() {
                 try {
                     const stored = localStorage.getItem(favoritesKey);
                     if (stored) {
                         const parsed = JSON.parse(stored);
-                        if (Array.isArray(parsed)) return new Set(parsed.filter(id => apps.some(app => app.id === id)));
+                        // シートは Firestore から後で読み込むため、sheet- のIDはここでは捨てない
+                        if (Array.isArray(parsed)) return new Set(parsed
+                            .map(id => legacySheetIds[id] || id)
+                            .filter(id => id.startsWith('sheet-') || apps.some(app => app.id === id)));
                     }
                 } catch (e) { console.warn('Favorite load error:', e); }
                 return new Set(defaultFavoriteIds.filter(id => apps.some(app => app.id === id)));
@@ -2004,10 +2258,11 @@
             }
 
             function getRawSectionApps(sectionId) {
-                if (sectionId === 'favorites') return apps.filter(app => favoriteIds.has(app.id));
+                if (sectionId === 'favorites') return getAllApps().filter(app => favoriteIds.has(app.id));
                 if (sectionId === 'kaientai') return apps.filter(app => app.groups.includes('kaientai'));
                 if (sectionId === 'management') return apps.filter(app => app.groups.includes('management'));
-                return apps;
+                if (sectionId === 'spreadsheet') return sheetApps;
+                return getAllApps();
             }
 
             function getDefaultOrderedApps(sectionId, sectionApps) {
@@ -2038,11 +2293,12 @@
 
             function getCurrentSections() {
                 const favoriteTitle = activeView === 'favorites' ? 'お気に入り' : 'よく使う';
+                const favoriteCount = getRawSectionApps('favorites').length;
                 const sections = {
                     favorites: {
                         id: 'favorites',
                         title: favoriteTitle,
-                        meta: activeView === 'favorites' ? `${favoriteIds.size}件` : 'お気に入り登録したアプリ',
+                        meta: activeView === 'favorites' ? `${favoriteCount}件` : 'お気に入り登録したアプリ',
                         apps: getRawSectionApps('favorites')
                     },
                     kaientai: {
@@ -2056,14 +2312,21 @@
                         title: '管理アプリ',
                         meta: '社内業務ツール',
                         apps: getRawSectionApps('management')
+                    },
+                    spreadsheet: {
+                        id: 'spreadsheet',
+                        title: 'スプレッドシート',
+                        meta: 'Googleスプレッドシート',
+                        apps: getRawSectionApps('spreadsheet')
                     }
                 };
 
-                if (activeView === 'all') return [sections.favorites, sections.kaientai, sections.management];
+                if (activeView === 'all') return [sections.favorites, sections.kaientai, sections.management, sections.spreadsheet];
                 if (activeView === 'favorites' || activeView === 'frequent') return [sections.favorites];
                 if (activeView === 'kaientai') return [sections.kaientai];
                 if (activeView === 'management') return [sections.management];
-                return [sections.favorites, sections.kaientai, sections.management];
+                if (activeView === 'spreadsheet') return [sections.spreadsheet];
+                return [sections.favorites, sections.kaientai, sections.management, sections.spreadsheet];
             }
 
             function filterApps(sectionApps) {
@@ -2141,6 +2404,19 @@
                 }
 
                 card.appendChild(favoriteBtn);
+                if (app.sheetId && canEditSheets()) {
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'sheet-edit-btn';
+                    editBtn.type = 'button';
+                    editBtn.setAttribute('aria-label', `${app.title}を編集`);
+                    editBtn.innerHTML = '<i class="fa-solid fa-pen"></i>';
+                    editBtn.addEventListener('click', e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openSheetEditor(app);
+                    });
+                    card.appendChild(editBtn);
+                }
                 card.appendChild(link);
                 return card;
             }
@@ -2168,12 +2444,14 @@
             }
 
             function updateDashboardCounts() {
+                const favoriteCount = getRawSectionApps('favorites').length;
                 const counts = {
-                    all: apps.length,
-                    favorites: favoriteIds.size,
-                    frequent: favoriteIds.size,
+                    all: getAllApps().length,
+                    favorites: favoriteCount,
+                    frequent: favoriteCount,
                     kaientai: getRawSectionApps('kaientai').length,
-                    management: getRawSectionApps('management').length
+                    management: getRawSectionApps('management').length,
+                    spreadsheet: sheetApps.length
                 };
                 container.querySelectorAll('[data-count-id]').forEach(el => {
                     el.textContent = counts[el.dataset.countId] ?? 0;
@@ -2183,7 +2461,12 @@
             function renderSection(section) {
                 const orderedApps = getOrderedApps(section.id, section.apps);
                 const sectionApps = filterApps(orderedApps);
-                if (sectionApps.length === 0) return 0;
+                const isSheetSection = section.id === 'spreadsheet';
+                const showSheetAdd = isSheetSection && canEditSheets();
+                // 未ログイン（デモ含む）はシートを読めないため、ログインの案内を出す
+                const showSheetLoginNote = isSheetSection && !canEditSheets();
+                // 追加ボタン・案内を出すため、検索中でなければシートが0件でも見出しは表示する
+                if (sectionApps.length === 0 && !(isSheetSection && !searchInput.value.trim())) return 0;
 
                 const sectionEl = document.createElement('section');
                 sectionEl.className = 'launcher-section';
@@ -2191,10 +2474,15 @@
                 sectionEl.innerHTML = `
                     <div class="launcher-section-header">
                         <h2 class="launcher-section-title">${section.title}</h2>
-                        <span class="launcher-section-meta">${section.meta}</span>
+                        <div class="launcher-section-tools">
+                            <span class="launcher-section-meta">${section.meta}</span>
+                            ${showSheetAdd ? '<button class="sheet-add-btn" type="button"><i class="fa-solid fa-plus"></i> 追加</button>' : ''}
+                        </div>
                     </div>
+                    ${showSheetLoginNote ? '<div class="launcher-empty"><i class="fa-brands fa-google"></i> Googleアカウントでログインすると表示されます。</div>' : ''}
                     <div class="launcher-section-grid"></div>
                 `;
+                sectionEl.querySelector('.sheet-add-btn')?.addEventListener('click', () => openSheetEditor(null));
 
                 const grid = sectionEl.querySelector('.launcher-section-grid');
                 sectionApps.forEach(app => grid.appendChild(createAppCard(app, section.id)));
@@ -2206,14 +2494,163 @@
                 sectionsRoot.innerHTML = '';
                 updateDashboardCounts();
 
-                let totalVisible = 0;
-                getCurrentSections().forEach(section => {
-                    totalVisible += renderSection(section);
-                });
+                getCurrentSections().forEach(renderSection);
 
-                emptyState.classList.toggle('hidden', totalVisible !== 0);
+                emptyState.classList.toggle('hidden', sectionsRoot.children.length !== 0);
                 applyBadgeCounts();
             }
+
+            function canEditSheets() {
+                return !!auth.currentUser;
+            }
+
+            function isValidSheetUrl(value) {
+                try {
+                    return new URL(value).protocol === 'https:';
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            function toSheetApp(doc) {
+                const data = doc.data();
+                const title = String(data.title || '');
+                const desc = String(data.desc || '');
+                const href = isValidSheetUrl(data.url) ? data.url : '#';
+                return {
+                    id: `sheet-${doc.id}`,
+                    sheetId: doc.id,
+                    title,
+                    desc,
+                    href,
+                    target: '_blank',
+                    iconHTML: '<div class="app-icon logo-tile"><img src="/sales-planning-spreadsheet.png" alt="スプレッドシート icon"></div>',
+                    badgeType: '',
+                    letter: '',
+                    groups: ['spreadsheet'],
+                    createdAt: data.createdAt ? data.createdAt.toMillis() : Date.now(),
+                    search: `${title} ${desc} ${href} spreadsheet スプレッドシート`.toLowerCase()
+                };
+            }
+
+            // 初回だけ既存2件を登録する（__seed ドキュメントで実行済みを記録）
+            function seedSheetsOnce() {
+                const seedRef = sheetCollection.doc('__seed');
+                return db.runTransaction(async tx => {
+                    const seed = await tx.get(seedRef);
+                    if (seed.exists) return;
+                    const now = firebase.firestore.FieldValue.serverTimestamp();
+                    Object.entries(sheetSeedDocs).forEach(([id, data]) => {
+                        tx.set(sheetCollection.doc(id), { ...data, createdAt: now, createdBy: 'seed' });
+                    });
+                    tx.set(seedRef, { seededAt: now });
+                }).catch(e => console.warn('Spreadsheet seed error:', e));
+            }
+
+            function subscribeSheets(user) {
+                if (unsubscribeSheets) unsubscribeSheets();
+                unsubscribeSheets = null;
+                sheetApps = [];
+                renderLauncher();
+                if (!user) return;
+
+                seedSheetsOnce();
+                unsubscribeSheets = sheetCollection.onSnapshot(snapshot => {
+                    sheetApps = snapshot.docs
+                        .filter(doc => !doc.id.startsWith('__'))
+                        .map(toSheetApp)
+                        .sort((a, b) => a.createdAt - b.createdAt);
+                    renderLauncher();
+                }, e => console.warn('Spreadsheet load error:', e));
+            }
+
+            const sheetOverlay = document.getElementById('sheet-overlay');
+            const sheetForm = document.getElementById('sheet-form');
+            const sheetHeading = sheetOverlay.querySelector('#sheet-modal-title span');
+            const sheetTitleInput = document.getElementById('sheet-title');
+            const sheetUrlInput = document.getElementById('sheet-url');
+            const sheetDescInput = document.getElementById('sheet-desc');
+            const sheetError = document.getElementById('sheet-error');
+            const sheetDeleteBtn = document.getElementById('sheet-delete');
+            const sheetSaveBtn = document.getElementById('sheet-save');
+            let editingSheetId = null;
+
+            function showSheetError(message) {
+                sheetError.textContent = message;
+                sheetError.classList.toggle('hidden', !message);
+            }
+
+            function openSheetEditor(app) {
+                editingSheetId = app ? app.sheetId : null;
+                sheetHeading.textContent = app ? 'スプレッドシートを編集' : 'スプレッドシートを追加';
+                sheetTitleInput.value = app ? app.title : '';
+                sheetUrlInput.value = app ? app.href : '';
+                sheetDescInput.value = app ? app.desc : '';
+                sheetDeleteBtn.classList.toggle('hidden', !app);
+                sheetSaveBtn.disabled = false;
+                showSheetError('');
+                sheetOverlay.classList.add('active');
+                sheetOverlay.setAttribute('aria-hidden', 'false');
+                sheetTitleInput.focus();
+            }
+
+            function closeSheetEditor() {
+                sheetOverlay.classList.remove('active');
+                sheetOverlay.setAttribute('aria-hidden', 'true');
+                editingSheetId = null;
+            }
+
+            sheetForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const title = sheetTitleInput.value.trim();
+                const url = sheetUrlInput.value.trim();
+                const desc = sheetDescInput.value.trim();
+                if (!title) return showSheetError('表示名を入力してください。');
+                if (!isValidSheetUrl(url)) return showSheetError('https:// で始まるURLを入力してください。');
+
+                const user = auth.currentUser;
+                const data = {
+                    title,
+                    url,
+                    desc,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: user ? user.email : ''
+                };
+                sheetSaveBtn.disabled = true;
+                try {
+                    if (editingSheetId) {
+                        await sheetCollection.doc(editingSheetId).update(data);
+                    } else {
+                        await sheetCollection.add({ ...data, createdAt: data.updatedAt, createdBy: data.updatedBy });
+                    }
+                    closeSheetEditor();
+                } catch (err) {
+                    console.error('Spreadsheet save error:', err);
+                    showSheetError(`保存に失敗しました: ${err.message}`);
+                    sheetSaveBtn.disabled = false;
+                }
+            });
+
+            sheetDeleteBtn.addEventListener('click', async () => {
+                if (!editingSheetId) return;
+                if (!confirm(`「${sheetTitleInput.value.trim()}」を削除しますか？`)) return;
+                try {
+                    await sheetCollection.doc(editingSheetId).delete();
+                    closeSheetEditor();
+                } catch (err) {
+                    console.error('Spreadsheet delete error:', err);
+                    showSheetError(`削除に失敗しました: ${err.message}`);
+                }
+            });
+
+            document.getElementById('sheet-close').addEventListener('click', closeSheetEditor);
+            document.getElementById('sheet-cancel').addEventListener('click', closeSheetEditor);
+            sheetOverlay.addEventListener('click', e => {
+                if (e.target === sheetOverlay) closeSheetEditor();
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && sheetOverlay.classList.contains('active')) closeSheetEditor();
+            });
 
             container.innerHTML = '';
             container.dataset.launcherReady = 'true';
@@ -2248,6 +2685,11 @@
                             <span>管理アプリ</span>
                             <span class="dashboard-count" data-count-id="management">0</span>
                         </button>
+                        <button class="dashboard-item" type="button" data-view="spreadsheet">
+                            <i class="fa-solid fa-table"></i>
+                            <span>スプレッドシート</span>
+                            <span class="dashboard-count" data-count-id="spreadsheet">0</span>
+                        </button>
                     </aside>
                     <main class="launcher-main">
                         <div class="launcher-toolbar">
@@ -2276,6 +2718,7 @@
 
             searchInput.addEventListener('input', renderLauncher);
             renderLauncher();
+            auth.onAuthStateChanged(subscribeSheets);
         }
 
         initOptimizedAppLauncher();
