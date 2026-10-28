@@ -696,9 +696,11 @@
             line-height: 1.25;
             margin: 0 34px 8px 0;
             max-width: 100%;
+            display: -webkit-box;
             overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            overflow-wrap: anywhere;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
         }
 
         .app-desc {
@@ -708,7 +710,7 @@
             line-height: 1.45;
             overflow: hidden;
             -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 3;
         }
 
         .app-desc:empty {
@@ -848,8 +850,8 @@
             justify-content: center;
             padding: 0;
             position: absolute;
-            right: 52px;
-            top: 14px;
+            right: 44px;
+            bottom: 12px;
             width: 28px;
             z-index: 4;
         }
@@ -860,6 +862,100 @@
 
         .launcher-section[data-section="favorites"] .sheet-edit-btn {
             display: none;
+        }
+
+        /* スプレッドシート欄はコンパクトな行表示 */
+        .launcher-section[data-section="spreadsheet"] .launcher-section-grid {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 10px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card {
+            border-radius: 12px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 0;
+            padding: 12px 40px 12px 14px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card.can-edit:hover .app-card-link {
+            padding-right: 66px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-icon {
+            flex: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-copy {
+            flex: 1;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-title {
+            font-size: 0.92rem;
+            margin: 0;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-desc {
+            font-size: 0.76rem;
+            margin-top: 2px;
+            -webkit-line-clamp: 1;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card-action {
+            display: none;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .favorite-btn,
+        .launcher-section[data-section="spreadsheet"] .sheet-edit-btn {
+            background: transparent;
+            border: none;
+            top: 50%;
+            bottom: auto;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .favorite-btn {
+            right: 10px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .favorite-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .launcher-section[data-section="spreadsheet"] .sheet-edit-btn {
+            display: none;
+            right: 36px;
+        }
+
+        .launcher-section[data-section="spreadsheet"] .app-card:hover .sheet-edit-btn,
+        .launcher-section[data-section="spreadsheet"] .sheet-edit-btn:focus-visible {
+            display: inline-flex;
+        }
+
+        /* iPad などマウスがない端末ではペンを常に表示 */
+        @media (hover: none) {
+            .launcher-section[data-section="spreadsheet"] .sheet-edit-btn {
+                display: inline-flex;
+            }
+
+            .launcher-section[data-section="spreadsheet"] .app-card.can-edit .app-card-link {
+                padding-right: 66px;
+            }
         }
 
         .sheet-overlay {
@@ -2416,6 +2512,7 @@
                         openSheetEditor(app);
                     });
                     card.appendChild(editBtn);
+                    card.classList.add('can-edit');
                 }
                 card.appendChild(link);
                 return card;
