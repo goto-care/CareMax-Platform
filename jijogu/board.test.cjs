@@ -140,18 +140,19 @@ test('current loans and returned records awaiting checks stay distinct from rese
     assert.equal(app.elements.get('board-count').textContent, '2件を表示');
 });
 
-test('new registrations appear above older records across statuses; legacy records use management number', () => {
-    const oldLoan = { ...fixtures[0], createdAt: '2026-10-01T09:00:00Z' };
-    const newReservation = { ...fixtures[1], createdAt: '2026-10-21T09:00:00Z', deliveryDate: '2026-09-01' };
-    const app = setup([oldLoan, newReservation]);
+test('cards are ordered by delivery date, latest first, with undated reservations on top and loans last; ties keep newest registration first', () => {
+    const undatedLoan = { ...fixtures[0], createdAt: '2026-10-01T09:00:00Z' };
+    const undatedReservation = { ...fixtures[1], id: 'r20', managementNo: 20, createdAt: '2026-10-02T09:00:00Z', deliveryDate: '' };
+    const laterRegisteredEarlierDate = { ...fixtures[1], managementNo: 15, createdAt: '2026-10-21T09:00:00Z', deliveryDate: '2026-11-09' };
+    const earlierRegisteredLaterDate = { ...fixtures[1], id: 'r13', managementNo: 13, createdAt: '2026-10-10T09:00:00Z', deliveryDate: '2026-11-17' };
+    const sameDateNewer = { ...fixtures[1], id: 'r16', managementNo: 16, createdAt: '2026-10-25T09:00:00Z', deliveryDate: '2026-11-09' };
+    const records = [undatedLoan, undatedReservation, laterRegisteredEarlierDate, earlierRegisteredLaterDate, sameDateNewer];
+    const app = setup(records);
     const cards = cardsIn(app.elements.get('sets-board').children[0]);
-    assert.match(cards[0].innerHTML, /No.2/);
-    assert.match(cards[1].innerHTML, /No.1/);
-    assert.equal(app.run('JSON.stringify(state.records)'), JSON.stringify([oldLoan, newReservation]));
-    const legacy = setup(fixtures);
-    const legacyCards = cardsIn(legacy.elements.get('sets-board').children[0]);
-    assert.match(legacyCards[0].innerHTML, /No.2/);
-    assert.match(legacyCards[1].innerHTML, /No.1/);
+    assert.deepEqual(cards.map(card => card.innerHTML.match(/No\.(\d+)/)[1]), ['20', '13', '16', '15', '1']);
+    assert.equal(app.run('JSON.stringify(state.records)'), JSON.stringify(records));
+    // The delivery warning still compares against the latest registration, not the display order.
+    assert.equal(app.run('sortedRecords(state.records)[0].managementNo'), 16);
     assert.equal(app.writes.length, 0);
 });
 
@@ -278,7 +279,7 @@ test('returning the loan highlights only the next scheduled shipment, with undat
     assert.match(next[0].innerHTML, /No.2/);
     assert.match(next[0].innerHTML, /次の発送/);
     assert.doesNotMatch(next[0].className, /current-card/);
-    // Registration order stays newest-first even when the next shipment is an older reservation.
+    // Display order follows delivery dates, not the next-shipment highlight.
     assert.match(cards[0].innerHTML, /No.4/);
     app.run("state.records[0].lastCheck = '2026-10-21'; render();");
     assert.equal(cardsIn(app.elements.get('sets-board').children[0]).filter(card => card.className.includes('next-shipment-card')).length, 1);

@@ -38,6 +38,22 @@ function sortedRecords(records) {
     });
 }
 
+// Board order: current loans last; otherwise undated records first, then the latest delivery date.
+// Ties keep registration order.
+function displayRecords(records) {
+    const registered = sortedRecords(records);
+    return registered.sort((a, b) => {
+        const aLending = recordPhase(a) === 'lending';
+        const bLending = recordPhase(b) === 'lending';
+        if (aLending !== bLending) return aLending ? 1 : -1;
+        const aDate = a.deliveryDate || '';
+        const bDate = b.deliveryDate || '';
+        if (!aDate && bDate) return -1;
+        if (aDate && !bDate) return 1;
+        return bDate.localeCompare(aDate);
+    });
+}
+
 function nextWaitingRecord(records) {
     return records.filter(record => recordPhase(record) === 'waiting').sort((a, b) => {
         const aDate = a.deliveryDate || a.shipDate || a.usageDate || '';
@@ -103,9 +119,9 @@ function render() {
             section.className = 'record-list';
             const title = document.createElement('h3');
             title.className = 'phase-title';
-            title.textContent = '登録が新しい順';
+            title.textContent = '納品希望日が遅い順（貸出中は最後）';
             section.appendChild(title);
-            sortedRecords(filtered).forEach(record => section.appendChild(createRecordCard(record, record === nextShipment)));
+            displayRecords(filtered).forEach(record => section.appendChild(createRecordCard(record, record === nextShipment)));
             column.appendChild(section);
         }
         if (!filtered.length) {
