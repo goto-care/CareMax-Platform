@@ -3,7 +3,7 @@ const JAPAN_HOLIDAY_CALENDAR = Object.freeze({
   "source": "https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv",
   "firstYear": 1955,
   "lastYear": 2027,
-  "checkedOn": "2026-10-21",
+  "checkedOn": "2026-11-06",
   "dates": [
     "1955-01-01",
     "1955-01-15",
