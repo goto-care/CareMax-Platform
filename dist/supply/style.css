@@ -36,8 +36,8 @@ body {
 /* Layout */
 .app-layout {
     display: grid;
-    grid-template-columns: 260px 1fr 300px;
-    /* Sidebar, Main, Cart */
+    grid-template-columns: minmax(0, 1fr) 300px;
+    /* Main, Cart */
     height: 100vh;
 }
 
@@ -46,14 +46,6 @@ body {
 }
 
 /* Sidebar */
-.nav-sidebar {
-    background: var(--bg-sidebar);
-    border-right: 1px solid var(--border-color);
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-}
-
 .logo-section {
     display: flex;
     align-items: center;
@@ -61,34 +53,6 @@ body {
     margin-bottom: 40px;
     text-decoration: none;
     color: var(--text-main);
-}
-
-.soloel-logo-link {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 64px;
-    margin-top: 12px;
-    padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: #ffffff;
-    box-shadow: var(--shadow-sm);
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-}
-
-.soloel-logo-link:hover {
-    transform: translateY(-1px);
-    border-color: #cbd5e1;
-    box-shadow: var(--shadow-md);
-}
-
-.sidebar-logo-image {
-    display: block;
-    width: 100%;
-    max-width: 160px;
-    height: auto;
 }
 
 .logo-icon {
@@ -107,22 +71,6 @@ body {
     font-weight: 700;
     font-size: 1.2rem;
     font-family: 'Outfit', sans-serif;
-}
-
-.nav-menu {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.nav-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-    letter-spacing: 0.05em;
 }
 
 .nav-item {
@@ -155,29 +103,9 @@ body {
 
 /* Main Content */
 .main-content {
-    padding: 32px 40px;
+    padding: 28px 32px;
     overflow-y: auto;
     background: var(--bg-app);
-}
-
-.top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 32px;
-}
-
-.page-title {
-    font-size: 2rem;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.top-actions {
-    display: flex;
-    gap: 16px;
-    align-items: center;
 }
 
 .search-container {
@@ -188,7 +116,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 300px;
+    width: 260px;
     box-shadow: var(--shadow-sm);
     transition: 0.2s;
 }
@@ -239,8 +167,8 @@ body {
 /* Grid */
 .inventory-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 16px;
     padding-bottom: 40px;
 }
 
@@ -253,7 +181,7 @@ body {
 .item-card {
     background: white;
     border-radius: var(--radius-lg);
-    padding: 24px;
+    padding: 16px;
     border: 1px solid var(--border-color);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -339,11 +267,11 @@ body {
 
 /* Image Container: Background Color Logic */
 .item-card-image-container {
-    height: 120px;
+    height: 110px;
     background: #f8fafc;
     /* Default fallback */
     border-radius: 12px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -386,8 +314,8 @@ body {
 
 .card-name {
     font-weight: 700;
-    font-size: 1.1rem;
-    margin-bottom: 4px;
+    font-size: 1rem;
+    margin-bottom: 6px;
     line-height: 1.4;
 }
 
@@ -404,7 +332,7 @@ body {
 
 .card-footer {
     margin-top: auto;
-    padding-top: 16px;
+    padding-top: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -467,8 +395,18 @@ body {
 }
 
 .cart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
     padding: 24px;
+    border: none;
     border-bottom: 1px solid var(--border-color);
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: default;
 }
 
 .cart-title {
@@ -482,7 +420,7 @@ body {
 .cart-items {
     flex: 1;
     overflow-y: auto;
-    padding: 24px;
+    padding: 20px;
 }
 
 .cart-empty {
@@ -509,8 +447,8 @@ body {
 }
 
 .pending-group {
-    margin-top: 24px;
-    padding: 16px;
+    margin-top: 20px;
+    padding: 14px;
     background: #fffbeb;
     border: 2px solid #fde68a;
     border-radius: 16px;
@@ -559,13 +497,14 @@ body {
 }
 
 .cart-footer {
-    padding: 24px;
+    padding: 20px 24px;
     border-top: 1px solid var(--border-color);
     text-align: center;
 }
 
 .cart-footer button {
     width: 100%;
+    justify-content: center;
 }
 
 /* Modal */
@@ -606,13 +545,13 @@ body {
 }
 
 .standard-modal {
-    width: 440px;
-    padding: 32px;
+    width: min(440px, calc(100vw - 32px));
+    padding: 28px;
 }
 
 .large-modal {
-    width: 800px;
-    padding: 32px;
+    width: min(960px, calc(100vw - 32px));
+    padding: 28px;
 }
 
 .modal-header {
@@ -756,6 +695,7 @@ body {
     padding: 12px;
     border-bottom: 1px solid var(--border-color);
     font-size: 0.9rem;
+    vertical-align: top;
 }
 
 /* Toast */
@@ -847,8 +787,12 @@ body {
 
 /* Large View */
 .inventory-grid.view-large {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 32px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.inventory-grid.view-large .item-card {
+    padding: 20px;
 }
 
 .inventory-grid.view-large .item-card-image-container {
@@ -1122,7 +1066,7 @@ body {
 }
 
 .inventory-grid.view-list .item-card {
-    grid-template-columns: 72px minmax(0, 1fr) 120px 140px 180px;
+    grid-template-columns: 72px minmax(0, 1fr) minmax(0, 170px) minmax(0, 110px) 190px;
 }
 
 .inventory-grid.view-list .item-card-image-container {
@@ -1141,4 +1085,946 @@ body {
     height: 28px;
     right: 6px;
     bottom: 6px;
+}
+
+/* ===== 2026-11 使いやすさの改修 ===== */
+
+/* お試しモードの帯 */
+.demo-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1500;
+    padding: 6px 16px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 1px solid #fde68a;
+}
+
+body.demo-mode .app-layout {
+    padding-top: 30px;
+}
+
+/* カテゴリー：件数 */
+.nav-item-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.nav-count {
+    min-width: 26px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.nav-item.active .nav-count {
+    background: #dbeafe;
+    color: var(--accent-primary);
+}
+
+/* 見出し */
+.new-item-button {
+    white-space: nowrap;
+}
+
+.inventory-empty {
+    padding: 48px 16px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.inventory-empty i {
+    font-size: 2rem;
+    color: #cbd5e1;
+    margin-bottom: 12px;
+}
+
+/* カード：カテゴリーと前回の注文日 */
+.card-meta-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+}
+
+.card-last-order {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.card-status-container:not(:empty) {
+    margin-top: 8px;
+}
+
+.card-status-container .cart-item-badge {
+    display: inline-block;
+}
+
+.btn-qty {
+    font-weight: 700;
+    opacity: 0.9;
+}
+
+/* 数量・急ぎ度の小さな札 */
+.chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0 2px;
+}
+
+.chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.chip-quantity {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.chip-urgent {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.chip-later {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* 申請リスト */
+.cart-title {
+    flex: 1;
+}
+
+.cart-count {
+    min-width: 24px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--accent-primary);
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.cart-sheet-hint {
+    display: none;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+}
+
+.cart-empty-hint {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.cart-item-meta {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.cart-item-meta .dot {
+    margin: 0 2px;
+    color: #cbd5e1;
+}
+
+.cart-item-comment {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #64748b;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.cart-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.link-btn,
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    color: #64748b;
+    padding: 2px 0;
+}
+
+.link-btn:hover,
+.icon-btn:hover {
+    color: var(--text-main);
+}
+
+.link-btn.danger,
+.icon-btn.danger {
+    color: #ef4444;
+}
+
+.icon-btn.danger {
+    opacity: 0.7;
+}
+
+.icon-btn.danger:hover {
+    opacity: 1;
+    color: #dc2626;
+}
+
+.pending-header {
+    color: #92400e;
+}
+
+.complete-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 6px;
+    font-size: 0.78rem;
+    background: #10b981;
+}
+
+.complete-btn:hover:not(:disabled) {
+    background: #059669;
+}
+
+/* 申請の入力欄 */
+.form-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 110px;
+    gap: 12px;
+}
+
+.quantity-field {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.quantity-field:focus-within {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group .quantity-field input {
+    border: none;
+    border-radius: 0;
+    text-align: center;
+    font-weight: 700;
+    padding: 12px 4px;
+    min-width: 0;
+    -moz-appearance: textfield;
+}
+
+.form-group .quantity-field input:focus {
+    box-shadow: none;
+}
+
+.quantity-field input::-webkit-outer-spin-button,
+.quantity-field input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.qty-step {
+    flex: 0 0 44px;
+    border: none;
+    background: #f8fafc;
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.qty-step:hover {
+    background: #eff6ff;
+    color: var(--accent-primary);
+}
+
+.urgency-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.form-group .urgency-option {
+    position: relative;
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.form-group .urgency-option input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.urgency-option span {
+    display: block;
+    padding: 10px 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.15s;
+}
+
+.urgency-option span:hover {
+    background: #f8fafc;
+}
+
+.urgency-option input:focus-visible + span {
+    outline: 3px solid rgba(59, 130, 246, 0.35);
+    outline-offset: 1px;
+}
+
+.urgency-normal input:checked + span {
+    border-color: var(--accent-primary);
+    background: #eff6ff;
+    color: var(--accent-primary);
+}
+
+.urgency-urgent input:checked + span {
+    border-color: #ef4444;
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.urgency-later input:checked + span {
+    border-color: #64748b;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+/* 注文履歴 */
+.history-body {
+    margin-bottom: 0;
+}
+
+.history-table .nowrap {
+    white-space: nowrap;
+}
+
+.history-table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    white-space: nowrap;
+}
+
+.history-item-name {
+    font-weight: 600;
+}
+
+.history-item-name.is-deleted {
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.history-item-category {
+    margin-top: 2px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.history-comment {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #475569;
+}
+
+.history-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 32px 12px !important;
+}
+
+/* リスト表示：前回の注文日も入るように */
+.inventory-grid.view-list .card-meta-container {
+    flex-wrap: wrap;
+}
+
+.inventory-grid.view-list .card-status-container:not(:empty) {
+    margin-top: 0;
+}
+
+/* スマホ・細い画面 */
+@media (max-width: 900px) {
+    body {
+        height: auto;
+        overflow: auto;
+    }
+
+    .app-layout {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .demo-banner {
+        position: static;
+    }
+
+    body.demo-mode .app-layout {
+        padding-top: 0;
+    }
+
+    /* 備品一覧 */
+    .main-content {
+        padding: 16px 16px 120px;
+        overflow: visible;
+    }
+
+    .inventory-grid,
+    .inventory-grid.view-small {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .inventory-grid.view-large {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .item-card {
+        padding: 12px;
+    }
+
+    .item-card:hover {
+        transform: none;
+    }
+
+    .item-card-image-container {
+        height: 96px;
+    }
+
+    .card-name {
+        font-size: 0.92rem;
+    }
+
+    .request-toggle-btn {
+        font-size: 0.82rem;
+        padding: 8px 4px;
+    }
+
+    .card-edit-btn {
+        width: 28px;
+    }
+
+    /* リスト表示：画像｜名前・カテゴリー・申請中｜ボタン */
+    .inventory-grid.view-list {
+        grid-template-columns: 1fr;
+    }
+
+    .inventory-grid.view-list .item-card {
+        grid-template-columns: 56px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "img name foot"
+            "img meta foot"
+            "img status foot";
+        gap: 2px 12px;
+        padding: 10px 12px;
+    }
+
+    .inventory-grid.view-list .item-card-image-container {
+        grid-area: img;
+        width: 56px;
+        height: 56px;
+    }
+
+    .inventory-grid.view-list .card-name {
+        grid-area: name;
+        white-space: normal;
+    }
+
+    .inventory-grid.view-list .card-meta-container {
+        grid-area: meta;
+    }
+
+    .inventory-grid.view-list .card-status-container {
+        grid-area: status;
+        text-align: left;
+    }
+
+    .inventory-grid.view-list .card-footer {
+        grid-area: foot;
+        gap: 4px;
+    }
+
+    .inventory-grid.view-list .request-toggle-btn {
+        min-width: 0;
+        padding: 6px 10px;
+    }
+
+    /* 申請リスト → 画面の下に畳む。見出しを押すと開く */
+    .cart-sidebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        height: auto;
+        max-height: 75vh;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -12px 30px -12px rgba(15, 23, 42, 0.25);
+    }
+
+    .cart-header {
+        cursor: pointer;
+        padding: 14px 20px;
+    }
+
+    .cart-title {
+        font-size: 1.05rem;
+    }
+
+    .cart-sheet-hint {
+        display: inline-block;
+    }
+
+    .cart-sidebar.sheet-open .cart-sheet-hint {
+        transform: rotate(180deg);
+    }
+
+    .cart-items {
+        display: none;
+        padding: 12px 16px;
+    }
+
+    .cart-sidebar.sheet-open .cart-items {
+        display: block;
+    }
+
+    .cart-footer {
+        padding: 10px 16px 14px;
+    }
+
+    .cart-sidebar:not(.has-drafts):not(.sheet-open) .cart-footer {
+        display: none;
+    }
+
+    /* 入力画面・履歴 */
+    .modal {
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        max-height: 92vh;
+        border-radius: 20px 20px 0 0;
+    }
+
+    .standard-modal,
+    .large-modal {
+        width: 100%;
+        padding: 20px 16px;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 8px 6px;
+        font-size: 0.8rem;
+    }
+
+    #toast-container {
+        left: 16px;
+        right: 16px;
+        bottom: 96px;
+    }
+}
+
+/* ===== 上の見出し・カテゴリーのタブ（2026-11 左のメニューから移した） ===== */
+
+.app-layout.layout-top {
+    grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.layout-top .main-content {
+    padding: 0 28px 32px;
+}
+
+.top-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -28px 16px;
+    padding: 14px 28px 12px;
+    background: rgba(248, 250, 252, 0.94);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.layout-top .logo-section {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.layout-top .logo-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.05rem;
+}
+
+.layout-top .search-container {
+    flex: 1;
+    width: auto;
+    max-width: 420px;
+    padding: 9px 18px;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.layout-top .primary-button {
+    padding: 10px 20px;
+}
+
+.ghost-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    background: white;
+    color: var(--text-main);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+}
+
+.ghost-button:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+/* カテゴリーのタブ */
+.category-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.category-tabs .nav-item {
+    flex-shrink: 0;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: white;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.category-tabs .nav-item i {
+    width: auto;
+}
+
+.category-tabs .nav-item.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: white;
+}
+
+.category-tabs .nav-item.active .nav-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.category-tabs .nav-count {
+    min-width: 0;
+    padding: 0 7px;
+}
+
+.category-hint {
+    margin-left: auto;
+    padding-left: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* 右：アスクルで注文 */
+.askul-order-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    color: var(--text-main);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s;
+}
+
+.askul-order-link img {
+    height: 16px;
+    width: auto;
+}
+
+.askul-order-link i {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.askul-order-link:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+@media (max-width: 1280px) {
+    .app-layout.layout-top {
+        grid-template-columns: minmax(0, 1fr) 270px;
+    }
+
+    .layout-top .main-content {
+        padding: 0 20px 32px;
+    }
+
+    .top-header {
+        margin: 0 -20px 16px;
+        padding: 12px 20px 10px;
+    }
+
+    .layout-top .search-container {
+        width: auto;
+    }
+
+    .category-hint {
+        display: none;
+    }
+}
+
+@media (max-width: 900px) {
+    .layout-top .main-content {
+        padding: 0 16px 120px;
+    }
+
+    .top-header {
+        margin: 0 -16px 12px;
+        padding: 10px 16px 8px;
+    }
+
+    .header-row {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .layout-top .logo-section .logo-text {
+        display: inline;
+        font-size: 1.05rem;
+    }
+
+    .layout-top .search-container {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .header-actions .view-switcher {
+        display: none;
+    }
+
+    .ghost-button,
+    .layout-top .primary-button {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .category-tabs {
+        margin-top: 10px;
+    }
+
+    .category-tabs .nav-item {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* ===== カードで数量を選ぶ ===== */
+.request-toggle-btn i {
+    font-size: 0.8em;
+}
+
+.card-stepper {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    min-width: 0;
+    border: 1px solid var(--accent-primary);
+    border-radius: 8px;
+    background: var(--accent-primary);
+    overflow: hidden;
+}
+
+.step-btn {
+    flex: 0 0 32px;
+    border: none;
+    background: rgba(255, 255, 255, 0.14);
+    color: white;
+    cursor: pointer;
+    font-size: 0.78rem;
+}
+
+.step-btn:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.step-value {
+    flex: 1;
+    min-width: 0;
+    padding: 7px 4px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.card-detail-btn {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.card-detail-btn:hover {
+    color: var(--accent-primary);
+    border-color: #bfdbfe;
+}
+
+.card-detail-btn.has-detail {
+    color: var(--accent-primary);
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+/* ===== 注文する人の道具（申請済みの見出しの下） ===== */
+.orderer-tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin: -4px 0 12px;
+}
+
+.orderer-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 4px;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    background: white;
+    color: #92400e;
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.orderer-btn:hover {
+    background: #fffbeb;
+}
+
+/* お試しモードの帯の分だけ、画面の高さを詰める（下の「申請を確定」が切れないように） */
+body.demo-mode .app-layout {
+    height: calc(100vh - 30px);
+}
+
+body.demo-mode .cart-sidebar {
+    height: calc(100vh - 30px);
+}
+
+@media (max-width: 900px) {
+    body.demo-mode .app-layout {
+        height: auto;
+    }
+
+    body.demo-mode .cart-sidebar {
+        height: auto;
+    }
+}
+
+/* スマホでは −／＋ を1行使って押しやすく */
+@media (max-width: 900px) {
+    .card-footer:has(.card-stepper) {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    .card-footer .card-stepper {
+        flex: 1 1 100%;
+    }
+
+    .card-footer .card-detail-btn {
+        margin-left: auto;
+    }
+
+    .step-btn {
+        flex-basis: 40px;
+    }
 }

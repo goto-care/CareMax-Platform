@@ -12,91 +12,100 @@
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=askul-logo-20260421-2">
+    <link rel="stylesheet" href="style.css?v=top-menu-20261111-1">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <!-- Auth script removed dependency -->
 </head>
 
 <body>
-    <!-- App Container -->
-    <div id="app" class="app-layout">
-        <!-- Sidebar Navigation -->
-        <nav class="nav-sidebar">
-            <a href="../index.html" class="logo-section">
-                <div class="logo-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
-                <span class="logo-text">&#20633;&#21697;&#31649;&#29702;</span>
-            </a>
+    <div id="demo-banner" class="demo-banner hidden">
+        お試しモード：この画面での操作は、このブラウザの中にだけ保存されます（みんなの申請には反映されません）
+    </div>
 
-            <div class="nav-menu">
-                <span class="nav-label">Category</span>
-                <div class="nav-item active" onclick="setCategoryFilter('')" id="nav-all">
-                    <i class="fa-solid fa-grid-2"></i> 全ての備品
-                </div>
-                <div class="nav-item" onclick="setCategoryFilter('事務用品')" id="nav-office">
-                    <i class="fa-solid fa-pen-nib"></i> 事務用品
-                </div>
-                <div class="nav-item" onclick="setCategoryFilter('清掃・衛生')" id="nav-cleaning">
-                    <i class="fa-solid fa-sparkles"></i> 清掃・衛生
-                </div>
-                <div class="nav-item" onclick="setCategoryFilter('飲食')" id="nav-food">
-                    <i class="fa-solid fa-mug-hot"></i> 飲食
-                </div>
-                <div class="nav-item" onclick="setCategoryFilter('その他')" id="nav-other">
-                    <i class="fa-solid fa-box-archive"></i> その他
-                </div>
-
-                <div style="margin-top: 32px;"></div>
-                <span class="nav-label">Menu</span>
-                <div class="nav-item" onclick="toggleHistory()">
-                    <i class="fa-solid fa-clock-rotate-left"></i> 注文履歴
-                </div>
-                <a href="https://solution.soloel.com/" class="soloel-logo-link" target="_blank" rel="noopener noreferrer" aria-label="ASKUL SOLOEL">
-                    <img src="askul-logo.jpg" class="sidebar-logo-image" alt="ASKUL">
-                </a>
-            </div>
-        </nav>
-
+    <!-- App Container（カテゴリーは上のタブ、申請リストは右） -->
+    <div id="app" class="app-layout layout-top">
         <!-- Main Content -->
         <main class="main-content">
-            <header class="top-bar">
-                <div>
-                    <h1 class="page-title">Inventory</h1>
-                    <p style="color:var(--text-muted); font-size: 0.9rem;">必要な備品を選択してください</p>
-                </div>
-                <div class="top-actions">
-                    <div class="view-switcher">
-                        <button onclick="setViewMode('list')" class="view-btn" id="view-list-btn" title="リスト表示"><i
-                                class="fa-solid fa-list"></i></button>
-                        <button onclick="setViewMode('small')" class="view-btn" id="view-small-btn" title="小サイズ"><i
-                                class="fa-solid fa-table-cells-large"></i></button>
-                        <button onclick="setViewMode('medium')" class="view-btn active" id="view-medium-btn"
-                            title="標準表示"><i class="fa-solid fa-table-cells"></i></button>
-                        <button onclick="setViewMode('large')" class="view-btn" id="view-large-btn" title="詳細表示"><i
-                                class="fa-solid fa-tablet-screen-button"></i></button>
-                    </div>
+            <header class="top-header">
+                <div class="header-row">
+                    <a href="../index.html" class="logo-section">
+                        <div class="logo-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <span class="logo-text">備品管理</span>
+                    </a>
                     <div class="search-container">
                         <i class="fa-solid fa-magnifying-glass"></i>
                         <input type="text" id="search-input" placeholder="備品を検索...">
                     </div>
-                    <button class="primary-button" onclick="openItemModal()">
-                        <i class="fa-solid fa-plus"></i> 新規登録
-                    </button>
+                    <div class="header-actions">
+                        <div class="view-switcher">
+                            <button onclick="setViewMode('list')" class="view-btn" id="view-list-btn" title="リスト表示"><i
+                                    class="fa-solid fa-list"></i></button>
+                            <button onclick="setViewMode('small')" class="view-btn" id="view-small-btn" title="小サイズ"><i
+                                    class="fa-solid fa-table-cells-large"></i></button>
+                            <button onclick="setViewMode('medium')" class="view-btn active" id="view-medium-btn"
+                                title="標準表示"><i class="fa-solid fa-table-cells"></i></button>
+                            <button onclick="setViewMode('large')" class="view-btn" id="view-large-btn" title="詳細表示"><i
+                                    class="fa-solid fa-tablet-screen-button"></i></button>
+                        </div>
+                        <button class="ghost-button" onclick="toggleHistory()">
+                            <i class="fa-solid fa-clock-rotate-left"></i> 注文履歴
+                        </button>
+                        <button class="primary-button new-item-button" onclick="openItemModal()">
+                            <i class="fa-solid fa-plus"></i> 新規登録
+                        </button>
+                    </div>
                 </div>
+                <nav class="category-tabs" aria-label="カテゴリー">
+                    <div class="nav-item active" onclick="setCategoryFilter('')" id="nav-all">
+                        <i class="fa-solid fa-border-all"></i>
+                        <span class="nav-item-text">全ての備品</span>
+                        <span class="nav-count" id="count-all">0</span>
+                    </div>
+                    <div class="nav-item" onclick="setCategoryFilter('事務用品')" id="nav-office">
+                        <i class="fa-solid fa-pen-nib"></i>
+                        <span class="nav-item-text">事務用品</span>
+                        <span class="nav-count" id="count-office">0</span>
+                    </div>
+                    <div class="nav-item" onclick="setCategoryFilter('清掃・衛生')" id="nav-cleaning">
+                        <i class="fa-solid fa-spray-can-sparkles"></i>
+                        <span class="nav-item-text">清掃・衛生</span>
+                        <span class="nav-count" id="count-cleaning">0</span>
+                    </div>
+                    <div class="nav-item" onclick="setCategoryFilter('飲食')" id="nav-food">
+                        <i class="fa-solid fa-mug-hot"></i>
+                        <span class="nav-item-text">飲食</span>
+                        <span class="nav-count" id="count-food">0</span>
+                    </div>
+                    <div class="nav-item" onclick="setCategoryFilter('その他')" id="nav-other">
+                        <i class="fa-solid fa-box-archive"></i>
+                        <span class="nav-item-text">その他</span>
+                        <span class="nav-count" id="count-other">0</span>
+                    </div>
+                    <span class="category-hint">「選択する」で申請リストに入ります</span>
+                </nav>
             </header>
 
             <div class="inventory-container">
                 <div id="inventory-grid" class="inventory-grid"></div>
+                <div id="inventory-empty" class="inventory-empty hidden">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <p>当てはまる備品がありません</p>
+                </div>
             </div>
         </main>
 
         <!-- Cart Sidebar -->
-        <aside class="cart-sidebar">
-            <div class="cart-header">
-                <h2 class="cart-title">
+        <aside class="cart-sidebar" id="cart-sidebar">
+            <button type="button" class="cart-header" id="cart-header" onclick="toggleCartSheet()" aria-expanded="false" aria-controls="requests-list">
+                <span class="cart-title" role="heading" aria-level="2">
                     <i class="fa-solid fa-inbox" style="color:var(--accent-primary)"></i>
                     申請リスト
-                </h2>
-            </div>
+                    <span class="cart-count hidden" id="cart-count">0</span>
+                </span>
+                <span class="cart-sheet-hint" id="cart-sheet-hint">
+                    <i class="fa-solid fa-chevron-up"></i>
+                </span>
+            </button>
             <div id="requests-list" class="cart-items">
                 <!-- Cart items here -->
             </div>
@@ -104,6 +113,11 @@
                 <button id="send-btn" class="primary-button" onclick="sendRequests()" disabled>
                     申請を確定
                 </button>
+                <a href="https://www.askul.co.jp/" class="askul-order-link" target="_blank" rel="noopener noreferrer">
+                    <img src="askul-logo.jpg" alt="ASKUL">
+                    <span>で注文する</span>
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
             </div>
         </aside>
     </div>
@@ -115,15 +129,16 @@
         <div class="modal-content large-modal">
             <div class="modal-header">
                 <h2>注文履歴</h2>
-                <button class="close-modal-btn" onclick="toggleHistory()"><i class="fa-solid fa-xmark"></i></button>
+                <button class="close-modal-btn" onclick="toggleHistory()" aria-label="閉じる"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body history-body">
                 <table class="history-table">
                     <thead>
                         <tr>
-                            <th>備品名</th>
-                            <th>カテゴリー</th>
                             <th>申請日</th>
+                            <th>備品名</th>
+                            <th>数量</th>
+                            <th>申請者</th>
                             <th>完了日</th>
                             <th>備考</th>
                         </tr>
@@ -139,15 +154,15 @@
         <div class="modal-content standard-modal">
             <div class="modal-header">
                 <h2 id="item-modal-title">備品を登録</h2>
-                <button class="close-modal-btn" onclick="closeItemModal()"><i class="fa-solid fa-xmark"></i></button>
+                <button class="close-modal-btn" onclick="closeItemModal()" aria-label="閉じる"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>備品名</label>
+                    <label for="item-name-input">備品名</label>
                     <input type="text" id="item-name-input" placeholder="例: ボールペン">
                 </div>
                 <div class="form-group">
-                    <label>カテゴリー</label>
+                    <label for="item-category-select">カテゴリー</label>
                     <select id="item-category-select">
                         <option value="事務用品">事務用品</option>
                         <option value="清掃・衛生">清掃・衛生</option>
@@ -197,24 +212,67 @@
     <div id="request-modal" class="modal hidden">
         <div class="modal-content standard-modal">
             <div class="modal-header">
-                <h2>申請詳細</h2>
-                <button class="close-modal-btn" onclick="closeRequestModal()"><i class="fa-solid fa-xmark"></i></button>
+                <h2 id="request-modal-title">申請内容</h2>
+                <button class="close-modal-btn" onclick="closeRequestModal()" aria-label="閉じる"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <p id="request-item-name" class="modal-subtitle"></p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="request-quantity-input">数量</label>
+                        <div class="quantity-field">
+                            <button type="button" class="qty-step" onclick="stepQuantity(-1)" aria-label="1つ減らす"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="request-quantity-input" min="1" max="999" step="1" value="1" inputmode="numeric">
+                            <button type="button" class="qty-step" onclick="stepQuantity(1)" aria-label="1つ増やす"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group unit-group">
+                        <label for="request-unit-input">単位</label>
+                        <input type="text" id="request-unit-input" placeholder="個" maxlength="8" list="unit-options">
+                        <datalist id="unit-options">
+                            <option value="個"></option>
+                            <option value="袋"></option>
+                            <option value="箱"></option>
+                            <option value="本"></option>
+                            <option value="巻"></option>
+                            <option value="冊"></option>
+                            <option value="パック"></option>
+                            <option value="セット"></option>
+                        </datalist>
+                    </div>
+                </div>
                 <div class="form-group">
-                    <label>備考</label>
-                    <textarea id="request-comment-input" rows="3" placeholder="例: 数量・色・サイズなど"></textarea>
+                    <label>急ぎ度</label>
+                    <div class="urgency-options" role="radiogroup" aria-label="急ぎ度">
+                        <label class="urgency-option urgency-urgent">
+                            <input type="radio" name="request-urgency" value="urgent">
+                            <span>急ぎ</span>
+                        </label>
+                        <label class="urgency-option urgency-normal">
+                            <input type="radio" name="request-urgency" value="normal" checked>
+                            <span>ふつう</span>
+                        </label>
+                        <label class="urgency-option urgency-later">
+                            <input type="radio" name="request-urgency" value="later">
+                            <span>次回でOK</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="request-name-input">申請者</label>
+                    <input type="text" id="request-name-input" placeholder="例: 後藤" maxlength="20" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label for="request-comment-input">備考</label>
+                    <textarea id="request-comment-input" rows="3" placeholder="例: 色・サイズ・型番、残りの数など"></textarea>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="cancel-btn" onclick="closeRequestModal()">キャンセル</button>
-                <button class="save-btn" onclick="confirmRequest()">カートに追加</button>
+                <button class="save-btn" id="request-confirm-btn" onclick="confirmRequest()">申請リストに追加</button>
             </div>
         </div>
     </div>
-
-    <!-- Settings Modal Removed -->
 
     <div id="toast-container"></div>
 
@@ -222,7 +280,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="app.js?v=request-detail-20260421-1"></script>
+    <script src="app.js?v=top-menu-20261111-1"></script>
 </body>
 
 </html>

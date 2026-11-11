@@ -12,17 +12,27 @@ const firebaseConfig = {
 };
 // ------------------------------
 
+// ?demo=1 : お試しモード。Firestore につながず、このブラウザの中だけで動く（画面の確認用）。
+const DEMO_MODE = new URLSearchParams(location.search).has('demo');
+
 // Initialize Firebase
 let app, auth, db;
-try {
-    app = firebase.initializeApp(firebaseConfig);
-    auth = firebase.auth();
-    db = firebase.firestore();
-    console.log("Firebase initialized successfully");
-} catch (e) {
-    console.warn("Firebase Init Skipped/Failed (Running in Demo Mode):", e);
-    db = null; // Fallback to localStorage mode
+if (DEMO_MODE) {
+    db = null;
+} else {
+    try {
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        console.log("Firebase initialized successfully");
+    } catch (e) {
+        console.warn("Firebase Init Skipped/Failed (Running in Demo Mode):", e);
+        db = null; // Fallback to localStorage mode
+    }
 }
+
+const LOCAL_KEY_PREFIX = DEMO_MODE ? 'caremax-supply-demo' : 'caremax-supply';
+const REQUESTER_NAME_KEY = 'caremax-supply-requester-name';
 
 // STATE
 const state = {
@@ -38,14 +48,17 @@ const state = {
         uid: 'user-common',
         email: 'staff@caremax.local'
     },
-    viewMode: 'medium' // 'list', 'medium', 'large'
+    viewMode: 'medium' // 'list', 'small', 'medium', 'large'
 };
 
 // DOM Elements
 const grid = document.getElementById('inventory-grid');
+const inventoryEmpty = document.getElementById('inventory-empty');
 const requestListEl = document.getElementById('requests-list');
 const sendBtn = document.getElementById('send-btn');
-const settingsNav = document.getElementById('settings-nav');
+const cartSidebar = document.getElementById('cart-sidebar');
+const cartHeader = document.getElementById('cart-header');
+const cartCount = document.getElementById('cart-count');
 
 // Modals
 const historyModal = document.getElementById('history-modal');
@@ -59,28 +72,154 @@ const itemImageFileInput = document.getElementById('item-image-file-input');
 const itemImagePreview = document.getElementById('item-image-preview');
 const itemImagePickerBtn = document.getElementById('item-image-picker-btn');
 const modalDeleteBtn = document.getElementById('modal-delete-btn');
-const settingsModal = document.getElementById('settings-modal');
-const adminEmailInput = document.getElementById('admin-email-input');
 
-// New Request Modal
+// Request Modal
 const requestModal = document.getElementById('request-modal');
+const requestModalTitle = document.getElementById('request-modal-title');
 const requestItemName = document.getElementById('request-item-name');
 const requestCommentInput = document.getElementById('request-comment-input');
+const requestQuantityInput = document.getElementById('request-quantity-input');
+const requestUnitInput = document.getElementById('request-unit-input');
+const requestNameInput = document.getElementById('request-name-input');
+const requestConfirmBtn = document.getElementById('request-confirm-btn');
 
 let activeItemId = null;
 let pendingRequestItemId = null;
 let sortableInstance = null; // SortableJS Instance
+let isSending = false;
 
 const CATEGORY_ORDER = {
-    '\u4e8b\u52d9\u7528\u54c1': 1,
-    '\u6e05\u6383\u30fb\u885b\u751f': 2,
-    '\u98f2\u98df': 3,
-    '\u305d\u306e\u4ed6': 4
+    '事務用品': 1,
+    '清掃・衛生': 2,
+    '飲食': 3,
+    'その他': 4
 };
+
+const CATEGORY_NAV = [
+    { category: '', navId: 'nav-all', countId: 'count-all' },
+    { category: '事務用品', navId: 'nav-office', countId: 'count-office' },
+    { category: '清掃・衛生', navId: 'nav-cleaning', countId: 'count-cleaning' },
+    { category: '飲食', navId: 'nav-food', countId: 'count-food' },
+    { category: 'その他', navId: 'nav-other', countId: 'count-other' }
+];
+
+const URGENCY = {
+    urgent: { label: '急ぎ', rank: 0 },
+    normal: { label: 'ふつう', rank: 1 },
+    later: { label: '次回でOK', rank: 2 }
+};
+
+// 名前が分からない申請（匿名ログインなど）は、申請者を空欄で表示する。
+const UNKNOWN_REQUESTER_NAMES = new Set(['', 'ゲストユーザー', 'Staff', '担当者']);
 
 const IMAGE_MAX_DIMENSION = 640;
 const IMAGE_OUTPUT_QUALITY = 0.82;
 const IMAGE_MAX_DATA_URL_LENGTH = 380000;
+
+// --- SMALL HELPERS ---
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+}
+
+function readStorage(key) {
+    try { return localStorage.getItem(key) || ''; } catch (e) { return ''; }
+}
+
+function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* private mode etc. */ }
+}
+
+function pad2(n) {
+    return String(n).padStart(2, '0');
+}
+
+// ISO の日時を、このPCの日付で表示する（以前は UTC の日付だったので朝9時前の申請が前日になっていた）。
+function formatDate(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '-';
+    return `${d.getFullYear()}/${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}`;
+}
+
+function formatShortDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const sameYear = d.getFullYear() === new Date().getFullYear();
+    return sameYear ? `${d.getMonth() + 1}/${d.getDate()}` : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function formatQuantity(req) {
+    if (!req || !req.quantity) return '';
+    return `${req.quantity}${req.unit || ''}`;
+}
+
+function getRequesterName(req) {
+    const name = String((req && req.userName) || '').trim();
+    return UNKNOWN_REQUESTER_NAMES.has(name) ? '' : name;
+}
+
+function findItem(itemId) {
+    return state.inventory.find(i => i.id === itemId) || null;
+}
+
+// 備品が削除されていても、申請のときに残した名前で表示する。
+function getRequestItemName(req) {
+    const item = findItem(req.itemId);
+    return item ? item.name : (req.itemName || '');
+}
+
+function getRequestItemCategory(req) {
+    const item = findItem(req.itemId);
+    return item ? (item.category || '') : (req.itemCategory || '');
+}
+
+function itemSnapshot(req) {
+    return {
+        itemName: getRequestItemName(req),
+        itemCategory: getRequestItemCategory(req)
+    };
+}
+
+function findDraftForItem(itemId) {
+    return state.requests.find(r => r.itemId === itemId && r.status === 'Draft') || null;
+}
+
+function getUrgencyLabel(urgency) {
+    return (URGENCY[urgency] || URGENCY.normal).label;
+}
+
+function getUrgencyRank(urgency) {
+    return (URGENCY[urgency] || URGENCY.normal).rank;
+}
+
+function renderRequestChips(req) {
+    const chips = [];
+    const quantity = formatQuantity(req);
+    if (quantity) chips.push(`<span class="chip chip-quantity">${escapeHtml(quantity)}</span>`);
+    if (req.urgency === 'urgent' || req.urgency === 'later') {
+        chips.push(`<span class="chip chip-${req.urgency}">${escapeHtml(getUrgencyLabel(req.urgency))}</span>`);
+    }
+    return chips.length ? `<div class="chip-row">${chips.join('')}</div>` : '';
+}
+
+function getDefaultRequesterName() {
+    const saved = readStorage(REQUESTER_NAME_KEY).trim();
+    if (saved) return saved;
+    const name = String((state.user && state.user.name) || '').trim();
+    if (state.user && state.user.email && !UNKNOWN_REQUESTER_NAMES.has(name)) return name;
+    return '';
+}
+
+function getLastUnit(itemId) {
+    const withUnit = state.requests
+        .filter(r => r.itemId === itemId && r.unit)
+        .sort((a, b) => String(b.timestamp || '').localeCompare(String(a.timestamp || '')));
+    return withUnit.length ? withUnit[0].unit : '';
+}
 
 // --- INIT ---
 
@@ -88,9 +227,8 @@ const IMAGE_MAX_DATA_URL_LENGTH = 380000;
 let renderTimeout = null;
 function scheduleRender() {
     if (renderTimeout) clearTimeout(renderTimeout);
-    renderTimeout = setTimeout(() => {
-        requestAnimationFrame(render);
-    }, 100);
+    // requestAnimationFrame は画面が見えていないと動かないので、時間だけで描き直す。
+    renderTimeout = setTimeout(render, 100);
 }
 
 function init() {
@@ -98,6 +236,19 @@ function init() {
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', scheduleRender);
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        if (!requestModal.classList.contains('hidden')) closeRequestModal();
+        else if (!itemModal.classList.contains('hidden')) closeItemModal();
+        else if (!historyModal.classList.contains('hidden')) toggleHistory();
+        else if (cartSidebar.classList.contains('sheet-open')) toggleCartSheet(false);
+    });
+
+    if (DEMO_MODE) {
+        document.getElementById('demo-banner')?.classList.remove('hidden');
+        document.body.classList.add('demo-mode');
     }
 
     // Connect Data Source
@@ -134,8 +285,6 @@ function init() {
             }
         });
 
-
-
         render(); // Render empty state initially
     }
 }
@@ -158,8 +307,33 @@ function initFirebaseListeners() {
     });
 }
 
+function getDemoSeed() {
+    const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+    const inventory = [
+        { id: '1', name: 'ボールペン (黒)', category: '事務用品', order: 0 },
+        { id: '2', name: 'コピー用紙 A4', category: '事務用品', order: 1 },
+        { id: '3', name: 'ハンドソープ', category: '清掃・衛生', order: 2 },
+        { id: '4', name: '紙コップ', category: '飲食', order: 3 },
+        { id: '5', name: '単三電池', category: 'その他', order: 4 },
+        { id: '6', name: '付箋 (75x75)', category: '事務用品', order: 5 },
+        { id: '10', name: 'ペーパータオル', category: '清掃・衛生', order: 6 },
+        { id: '11', name: 'ゴミ袋 (45L)', category: '清掃・衛生', order: 7 },
+        { id: '12', name: 'コーヒー (粉)', category: '飲食', order: 8 }
+    ];
+    if (!DEMO_MODE) return { inventory, requests: [] };
+
+    const requests = [
+        { id: 'demo-h1', itemId: '4', itemName: '紙コップ', itemCategory: '飲食', quantity: 2, unit: '袋', urgency: 'normal', userName: '石原', comment: 'いつものカップ', status: 'Ordered', timestamp: daysAgo(20), orderedAt: daysAgo(18) },
+        { id: 'demo-h2', itemId: '2', itemName: 'コピー用紙 A4', itemCategory: '事務用品', quantity: 1, unit: '箱', urgency: 'urgent', userName: '後藤', comment: '', status: 'Ordered', timestamp: daysAgo(9), orderedAt: daysAgo(8) },
+        { id: 'demo-h3', itemId: 'deleted-1', itemName: 'クリアファイル A4', itemCategory: '事務用品', quantity: 1, unit: 'パック', urgency: 'later', userName: '宇原', comment: '', status: 'Ordered', timestamp: daysAgo(40), orderedAt: daysAgo(35) },
+        { id: 'demo-h4', itemId: 'deleted-2', userName: 'ゲストユーザー', comment: '残り2巻', status: 'Ordered', timestamp: daysAgo(60), orderedAt: daysAgo(58) }
+    ];
+    return { inventory, requests };
+}
+
 function loadLocalData() {
-    const localInv = localStorage.getItem('caremax-supply-inventory');
+    const localInv = readStorage(`${LOCAL_KEY_PREFIX}-inventory`);
+    const seed = getDemoSeed();
     if (localInv) {
         state.inventory = JSON.parse(localInv);
         // Ensure order exists
@@ -167,31 +341,24 @@ function loadLocalData() {
             if (item.order === undefined) item.order = index;
         });
     } else {
-        state.inventory = [
-            { id: '1', name: 'ボールペン (黒)', category: '事務用品', order: 0 },
-            { id: '2', name: 'コピー用紙 A4', category: '事務用品', order: 1 },
-            { id: '3', name: 'ハンドソープ', category: '清掃・衛生', order: 2 },
-            { id: '4', name: '紙コップ', category: '飲食', order: 3 },
-            { id: '5', name: '単三電池', category: 'その他', order: 4 },
-            { id: '6', name: '付箋 (75x75)', category: '事務用品', order: 5 },
-            { id: '10', name: 'ペーパータオル', category: '清掃・衛生', order: 6 },
-            { id: '11', name: 'ゴミ袋 (45L)', category: '清掃・衛生', order: 7 },
-            { id: '12', name: 'コーヒー (粉)', category: '飲食', order: 8 }
-        ];
+        state.inventory = seed.inventory;
         saveLocalInventory();
     }
 
-    const localReq = localStorage.getItem('caremax-supply-requests');
+    const localReq = readStorage(`${LOCAL_KEY_PREFIX}-requests`);
     if (localReq) {
         state.requests = JSON.parse(localReq);
+    } else if (seed.requests.length) {
+        state.requests = seed.requests;
+        saveLocalRequests();
     }
 }
 
 function saveLocalInventory() {
-    if (!db) localStorage.setItem('caremax-supply-inventory', JSON.stringify(state.inventory));
+    if (!db) writeStorage(`${LOCAL_KEY_PREFIX}-inventory`, JSON.stringify(state.inventory));
 }
 function saveLocalRequests() {
-    if (!db) localStorage.setItem('caremax-supply-requests', JSON.stringify(state.requests));
+    if (!db) writeStorage(`${LOCAL_KEY_PREFIX}-requests`, JSON.stringify(state.requests));
 }
 
 // Save inventory order to Firestore (for drag-and-drop sync)
@@ -217,7 +384,7 @@ async function saveInventoryOrder() {
 
 // --- HELPER FUNC: Pictogram ---
 function getPictogram(name) {
-    const text = name.toLowerCase();
+    const text = String(name || '').toLowerCase();
     if (text.includes('コップ') || text.includes('カップ') || text.includes('コーヒー')) return 'fa-mug-hot';
     if (text.includes('箸') || text.includes('スプーン') || text.includes('器')) return 'fa-utensils';
     if (text.includes('ハンドソープ') || text.includes('石鹸')) return 'fa-soap';
@@ -235,8 +402,8 @@ function getItemImagePlaceholderMarkup() {
     return `
         <div class="item-modal-image-empty">
             <i class="fa-regular fa-image"></i>
-            <span>\u753b\u50cf\u3092\u307e\u3060\u767b\u9332\u3057\u3066\u3044\u307e\u305b\u3093</span>
-            <small>\u30af\u30ea\u30c3\u30af\u3057\u3066\u753b\u50cf\u3092\u9078\u629e\u3067\u304d\u307e\u3059</small>
+            <span>画像をまだ登録していません</span>
+            <small>クリックして画像を選択できます</small>
         </div>
     `;
 }
@@ -246,10 +413,10 @@ function renderItemImagePreview(imageUrl = '', itemName = '') {
 
     if (imageUrl) {
         itemImagePreview.classList.remove('item-modal-image-placeholder');
-        itemImagePreview.innerHTML = '<img src="' + imageUrl + '" class="item-modal-preview-image" alt="">';
+        itemImagePreview.innerHTML = '<img src="' + escapeHtml(imageUrl) + '" class="item-modal-preview-image" alt="">';
 
         if (itemImagePickerBtn) {
-            const label = itemName ? itemName + '\u306e\u753b\u50cf\u3092\u5909\u66f4' : '\u753b\u50cf\u3092\u5909\u66f4';
+            const label = itemName ? itemName + 'の画像を変更' : '画像を変更';
             itemImagePickerBtn.setAttribute('aria-label', label);
             itemImagePickerBtn.title = label;
         }
@@ -260,8 +427,8 @@ function renderItemImagePreview(imageUrl = '', itemName = '') {
     itemImagePreview.innerHTML = getItemImagePlaceholderMarkup();
 
     if (itemImagePickerBtn) {
-        itemImagePickerBtn.setAttribute('aria-label', '\u753b\u50cf\u3092\u767b\u9332');
-        itemImagePickerBtn.title = '\u753b\u50cf\u3092\u767b\u9332';
+        itemImagePickerBtn.setAttribute('aria-label', '画像を登録');
+        itemImagePickerBtn.title = '画像を登録';
     }
 }
 
@@ -269,7 +436,7 @@ function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('\u753b\u50cf\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f'));
+        reader.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
         reader.readAsDataURL(file);
     });
 }
@@ -278,14 +445,14 @@ function loadImageElement(src) {
     return new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error('\u753b\u50cf\u306e\u8aad\u307f\u8fbc\u307f\u306b\u5931\u6557\u3057\u307e\u3057\u305f'));
+        image.onerror = () => reject(new Error('画像の読み込みに失敗しました'));
         image.src = src;
     });
 }
 
 async function createOptimizedImageDataUrl(file) {
     if (!file || !file.type.startsWith('image/')) {
-        throw new Error('\u753b\u50cf\u30d5\u30a1\u30a4\u30eb\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044');
+        throw new Error('画像ファイルを選択してください');
     }
 
     const originalDataUrl = await readFileAsDataUrl(file);
@@ -313,7 +480,7 @@ async function createOptimizedImageDataUrl(file) {
         : canvas.toDataURL(mimeType, IMAGE_OUTPUT_QUALITY);
 
     if (optimizedDataUrl.length > IMAGE_MAX_DATA_URL_LENGTH) {
-        throw new Error('\u753b\u50cf\u30b5\u30a4\u30ba\u304c\u5927\u304d\u3059\u304e\u307e\u3059\u3002\u3082\u3046\u5c11\u3057\u5c0f\u3055\u3044\u753b\u50cf\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044');
+        throw new Error('画像サイズが大きすぎます。もう少し小さい画像を選択してください');
     }
 
     return optimizedDataUrl;
@@ -331,10 +498,10 @@ async function handleItemImageSelection(event) {
         const imageUrl = await createOptimizedImageDataUrl(file);
         if (itemImageUrlInput) itemImageUrlInput.value = imageUrl;
         renderItemImagePreview(imageUrl, itemNameInput?.value.trim() || '');
-        showToast('\u753b\u50cf\u3092\u53cd\u6620\u3057\u307e\u3057\u305f');
+        showToast('画像を反映しました');
     } catch (error) {
         console.error(error);
-        showToast(error.message || '\u753b\u50cf\u306e\u767b\u9332\u306b\u5931\u6557\u3057\u307e\u3057\u305f');
+        showToast(error.message || '画像の登録に失敗しました');
     } finally {
         event.target.value = '';
     }
@@ -346,7 +513,7 @@ function clearItemImage(showFeedback = true) {
     renderItemImagePreview('', itemNameInput?.value.trim() || '');
 
     if (showFeedback) {
-        showToast('\u753b\u50cf\u3092\u524a\u9664\u3057\u307e\u3057\u305f');
+        showToast('画像を削除しました');
     }
 }
 
@@ -402,10 +569,10 @@ async function handleCardImageSelection(itemId, event) {
     try {
         const imageUrl = await createOptimizedImageDataUrl(file);
         await updateItemImage(itemId, imageUrl);
-        showToast('\u753b\u50cf\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f');
+        showToast('画像を更新しました');
     } catch (error) {
         console.error(error);
-        showToast(error.message || '\u753b\u50cf\u306e\u767b\u9332\u306b\u5931\u6557\u3057\u307e\u3057\u305f');
+        showToast(error.message || '画像の登録に失敗しました');
     } finally {
         event.target.value = '';
     }
@@ -415,11 +582,9 @@ async function handleCardImageSelection(itemId, event) {
 
 function setCategoryFilter(cat) {
     state.currentFilter = cat;
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    const ids = { '': 'nav-all', '事務用品': 'nav-office', '清掃・衛生': 'nav-cleaning', '飲食': 'nav-food', 'その他': 'nav-other' };
-    const activeId = ids[cat];
-    if (activeId) document.getElementById(activeId)?.classList.add('active');
-    if (activeId) document.getElementById(activeId)?.classList.add('active');
+    CATEGORY_NAV.forEach(nav => {
+        document.getElementById(nav.navId)?.classList.toggle('active', nav.category === cat);
+    });
     render();
 }
 
@@ -431,6 +596,13 @@ function setViewMode(mode) {
     render();
 }
 
+// スマホでは申請リストを画面の下に畳んでおき、見出しを押すと開く。
+function toggleCartSheet(force) {
+    const open = typeof force === 'boolean' ? force : !cartSidebar.classList.contains('sheet-open');
+    cartSidebar.classList.toggle('sheet-open', open);
+    cartHeader?.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
 function toggleHistory() {
     const isHidden = historyModal.classList.contains('hidden');
     if (isHidden) { renderHistory(); historyModal.classList.remove('hidden'); }
@@ -440,37 +612,37 @@ function toggleHistory() {
 function renderHistory() {
     historyList.innerHTML = '';
     // Show all completed
-    const completed = state.requests.filter(r => r.status === 'Ordered').sort((a, b) => new Date(b.orderedAt) - new Date(a.orderedAt));
+    const completed = state.requests
+        .filter(r => r.status === 'Ordered')
+        .sort((a, b) => new Date(b.orderedAt || b.timestamp || 0) - new Date(a.orderedAt || a.timestamp || 0));
+
+    if (completed.length === 0) {
+        historyList.innerHTML = '<tr><td colspan="6" class="history-empty">まだ注文履歴はありません</td></tr>';
+        return;
+    }
 
     completed.forEach(req => {
-        const item = state.inventory.find(i => i.id === req.itemId);
-        const name = item ? item.name : '不明な備品';
-        const cat = item ? item.category : '-';
+        const name = getRequestItemName(req);
+        const cat = getRequestItemCategory(req);
+        const requester = getRequesterName(req);
+        const urgency = (req.urgency === 'urgent' || req.urgency === 'later')
+            ? `<span class="chip chip-${req.urgency}">${escapeHtml(getUrgencyLabel(req.urgency))}</span>`
+            : '';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${name}</td>
-            <td>${cat}</td>
-            <td>${req.timestamp.split('T')[0]}</td>
-            <td>${req.orderedAt ? req.orderedAt.split('T')[0] : '-'}</td>
-            <td>${req.comment || ''}</td>
+            <td class="nowrap">${escapeHtml(formatDate(req.timestamp))}</td>
+            <td>
+                <div class="history-item-name ${name ? '' : 'is-deleted'}">${escapeHtml(name || '（削除された備品）')}</div>
+                ${cat ? `<div class="history-item-category">${escapeHtml(cat)}</div>` : ''}
+            </td>
+            <td class="nowrap">${escapeHtml(formatQuantity(req) || '-')} ${urgency}</td>
+            <td class="nowrap">${escapeHtml(requester || '-')}</td>
+            <td class="nowrap">${escapeHtml(formatDate(req.orderedAt))}</td>
+            <td class="history-comment">${escapeHtml(req.comment || '')}</td>
         `;
         historyList.appendChild(tr);
     });
-}
-
-function openSettingsModal() {
-    adminEmailInput.value = state.config.email;
-    settingsModal.classList.remove('hidden');
-}
-function closeSettingsModal() { settingsModal.classList.add('hidden'); }
-function saveSettings() {
-    const email = adminEmailInput.value.trim();
-    if (email) {
-        state.config.email = email;
-        showToast('設定を保存しました');
-        closeSettingsModal();
-    }
 }
 
 // Items Management
@@ -483,18 +655,18 @@ function openItemModal(id = null) {
         const item = state.inventory.find(i => i.id === id);
         if (!item) return;
         activeItemId = id;
-        itemModalTitle.textContent = '\u5099\u54c1\u3092\u7de8\u96c6';
+        itemModalTitle.textContent = '備品を編集';
         itemNameInput.value = item.name;
-        itemCategorySelect.value = item.category || '\u305d\u306e\u4ed6';
+        itemCategorySelect.value = item.category || 'その他';
         imageUrl = item.imageUrl || '';
         itemName = item.name || '';
         if (itemImageUrlInput) itemImageUrlInput.value = imageUrl;
         modalDeleteBtn.classList.remove('hidden');
     } else {
         activeItemId = null;
-        itemModalTitle.textContent = '\u5099\u54c1\u3092\u767b\u9332';
+        itemModalTitle.textContent = '備品を登録';
         itemNameInput.value = '';
-        itemCategorySelect.value = '\u4e8b\u52d9\u7528\u54c1';
+        itemCategorySelect.value = state.currentFilter || '事務用品';
         if (itemImageUrlInput) itemImageUrlInput.value = '';
         modalDeleteBtn.classList.add('hidden');
     }
@@ -543,8 +715,18 @@ async function saveItem() {
 }
 
 async function deleteItemFromModal() {
-    if (!activeItemId || !confirm('削除しますか？')) return;
+    if (!activeItemId) return;
+    const item = findItem(activeItemId);
+    const label = item ? `「${item.name}」` : 'この備品';
+    if (!confirm(`${label}を削除しますか？\n（注文履歴には備品名が残ります）`)) return;
+
+    // 削除する前に、この備品の申請に備品名を書き残す（履歴が「不明な備品」にならないように）。
+    const related = state.requests.filter(r => r.itemId === activeItemId && !r.itemName);
+    const snapshot = { itemName: item ? item.name : '', itemCategory: item ? (item.category || '') : '' };
+
     if (!db) {
+        related.forEach(r => Object.assign(r, snapshot));
+        saveLocalRequests();
         state.inventory = state.inventory.filter(i => i.id !== activeItemId);
         saveLocalInventory();
         closeItemModal();
@@ -552,12 +734,21 @@ async function deleteItemFromModal() {
         return;
     }
     try {
+        for (let i = 0; i < related.length; i += 400) {
+            const batch = db.batch();
+            related.slice(i, i + 400).forEach(r => batch.update(db.collection("requests").doc(r.id), snapshot));
+            await batch.commit();
+        }
         await db.collection("inventory").doc(activeItemId).delete();
         closeItemModal();
-    } catch (e) { console.error(e); }
+        showToast("削除しました");
+    } catch (e) {
+        console.error(e);
+        showToast("削除に失敗しました");
+    }
 }
 
-// --- NEW REQUEST FLOW ---
+// --- REQUEST FLOW ---
 
 function getRequestUser() {
     return (state.user && state.user.uid)
@@ -565,24 +756,44 @@ function getRequestUser() {
         : { uid: 'user-common', name: 'Staff', email: '' };
 }
 
+function getSelectedUrgency() {
+    const checked = document.querySelector('input[name="request-urgency"]:checked');
+    return checked && URGENCY[checked.value] ? checked.value : 'normal';
+}
+
+function setSelectedUrgency(value) {
+    const target = URGENCY[value] ? value : 'normal';
+    document.querySelectorAll('input[name="request-urgency"]').forEach(input => {
+        input.checked = input.value === target;
+    });
+}
+
+function stepQuantity(delta) {
+    const current = parseInt(requestQuantityInput.value, 10);
+    const next = Math.min(999, Math.max(1, (Number.isFinite(current) ? current : 1) + delta));
+    requestQuantityInput.value = String(next);
+}
 
 function openRequestModal(itemId) {
-    if (!itemId || !requestModal || !requestItemName || !requestCommentInput) return;
+    if (!itemId || !requestModal) return;
 
-    const requestUser = getRequestUser();
-    const item = state.inventory.find(i => i.id === itemId);
-    const existing = state.requests.find(r => r.itemId === itemId && r.userId === requestUser.uid && r.status === 'Draft');
+    const item = findItem(itemId);
+    const existing = findDraftForItem(itemId);
 
-    requestItemName.textContent = item?.name || '';
+    pendingRequestItemId = itemId;
+    requestItemName.textContent = item?.name || existing?.itemName || '';
+    requestModalTitle.textContent = existing ? '申請内容を変更' : '申請内容';
+    requestConfirmBtn.textContent = existing ? '変更を保存' : '申請リストに追加';
+    requestQuantityInput.value = String(existing?.quantity || 1);
+    requestUnitInput.value = existing ? (existing.unit || '') : getLastUnit(itemId);
+    setSelectedUrgency(existing?.urgency || 'normal');
+    requestNameInput.value = (existing && getRequesterName(existing)) || getDefaultRequesterName();
+    requestCommentInput.value = existing?.comment || '';
 
-    if (existing) {
-        pendingRequestItemId = itemId;
-        requestCommentInput.value = existing.comment || '';
-    } else {
-        pendingRequestItemId = itemId;
-        requestCommentInput.value = '';
-    }
     requestModal.classList.remove('hidden');
+    setTimeout(() => {
+        (requestNameInput.value ? requestQuantityInput : requestNameInput).focus();
+    }, 50);
 }
 
 function closeRequestModal() {
@@ -592,43 +803,194 @@ function closeRequestModal() {
 
 async function confirmRequest() {
     if (!pendingRequestItemId) return;
-    const comment = requestCommentInput.value.trim();
     const itemId = pendingRequestItemId;
+    const userName = requestNameInput.value.trim();
+    const quantity = parseInt(requestQuantityInput.value, 10);
+
+    if (!userName) {
+        showToast("申請者のお名前を入力してください");
+        requestNameInput.focus();
+        return;
+    }
+    if (!Number.isFinite(quantity) || quantity < 1 || quantity > 999) {
+        showToast("数量は1〜999の数字で入力してください");
+        requestQuantityInput.focus();
+        return;
+    }
+    writeStorage(REQUESTER_NAME_KEY, userName);
+
+    const item = findItem(itemId);
+    const existing = findDraftForItem(itemId);
+    const fields = {
+        quantity,
+        unit: requestUnitInput.value.trim() || '個', // 空欄なら見本どおり「個」
+        urgency: getSelectedUrgency(),
+        comment: requestCommentInput.value.trim(),
+        userName,
+        itemName: item?.name || existing?.itemName || '',
+        itemCategory: item?.category || existing?.itemCategory || ''
+    };
+    const doneMessage = existing ? "申請内容を変更しました" : "申請リストに追加しました";
     const requestUser = getRequestUser();
 
     if (!db) {
-        const existing = state.requests.find(r => r.itemId === itemId && r.userId === requestUser.uid && r.status === 'Draft');
         if (existing) {
-            existing.comment = comment;
+            Object.assign(existing, fields);
         } else {
             state.requests.push({
                 id: 'req-' + Date.now(),
-                itemId: itemId,
+                itemId,
                 userId: requestUser.uid,
-                userName: requestUser.name,
                 timestamp: new Date().toISOString(),
                 status: 'Draft',
-                comment: comment
+                ...fields
             });
         }
         saveLocalRequests();
         closeRequestModal();
         render();
-        showToast("カートに追加しました");
-    } else {
-        try {
-            // Simplified for Demo Logic Priority, assume success
+        showToast(doneMessage);
+        return;
+    }
+
+    try {
+        if (existing) {
+            // 同じ備品の申請がもうリストにあれば、新しく足さずに書き換える（以前は2件になっていた）。
+            await db.collection("requests").doc(existing.id).update(fields);
+        } else {
             await db.collection("requests").add({
-                itemId: itemId,
+                itemId,
                 userId: requestUser.uid,
-                userName: requestUser.name,
                 timestamp: new Date().toISOString(),
                 status: 'Draft',
-                comment: comment
+                ...fields
             });
-            closeRequestModal();
-            showToast("カートに追加しました");
-        } catch (e) { console.error(e); }
+        }
+        closeRequestModal();
+        showToast(doneMessage);
+    } catch (e) {
+        console.error(e);
+        showToast("保存に失敗しました。もう一度お試しください");
+    }
+}
+
+// 「選択する」で、名前を覚えていれば数量1のまま申請リストに入れる（初めての人は入力画面を出す）。
+async function quickAddRequest(itemId) {
+    const userName = getDefaultRequesterName();
+    if (!userName || findDraftForItem(itemId)) {
+        openRequestModal(itemId);
+        return;
+    }
+    const item = findItem(itemId);
+    const requestUser = getRequestUser();
+    const data = {
+        itemId,
+        userId: requestUser.uid,
+        timestamp: new Date().toISOString(),
+        status: 'Draft',
+        quantity: 1,
+        unit: getLastUnit(itemId) || '個',
+        urgency: 'normal',
+        comment: '',
+        userName,
+        itemName: item?.name || '',
+        itemCategory: item?.category || ''
+    };
+    const message = `${item?.name || ''}を申請リストに入れました（急ぎ・備考は吹き出しボタンから）`;
+    if (!db) {
+        state.requests.push({ id: 'req-' + Date.now(), ...data });
+        saveLocalRequests();
+        render();
+        showToast(message);
+        return;
+    }
+    try {
+        await db.collection("requests").add(data);
+        showToast(message);
+    } catch (e) {
+        console.error(e);
+        showToast("保存に失敗しました。もう一度お試しください");
+    }
+}
+
+async function changeDraftQuantity(itemId, delta) {
+    const draft = findDraftForItem(itemId);
+    if (!draft) return;
+    const next = Math.min(999, (draft.quantity || 1) + delta);
+    if (next < 1) {
+        await removeRequest(draft.id);
+        return;
+    }
+    if (!db) {
+        draft.quantity = next;
+        saveLocalRequests();
+        render();
+        return;
+    }
+    try {
+        await db.collection("requests").doc(draft.id).update({ quantity: next });
+    } catch (e) {
+        console.error(e);
+        showToast("保存に失敗しました");
+    }
+}
+
+// 注文する人の道具：注文待ちをコピーしたり、まとめて完了にしたりする。
+function getSortedPendings() {
+    return state.requests
+        .filter(r => r.status === 'Pending')
+        .sort((a, b) => getUrgencyRank(a.urgency) - getUrgencyRank(b.urgency)
+            || String(a.submittedAt || a.timestamp || '').localeCompare(String(b.submittedAt || b.timestamp || '')));
+}
+
+async function copyOrderList() {
+    const pendings = getSortedPendings();
+    if (!pendings.length) return;
+    const today = new Date();
+    const lines = pendings.map(r => {
+        const parts = [`・${getRequestItemName(r) || '（削除された備品）'}`];
+        const qty = formatQuantity(r);
+        if (qty) parts.push(` ${qty}`);
+        if (r.urgency === 'urgent' || r.urgency === 'later') parts.push(`（${getUrgencyLabel(r.urgency)}）`);
+        if (r.comment) parts.push(` — ${String(r.comment).replace(/\s*\n\s*/g, ' ')}`);
+        return parts.join('');
+    });
+    const text = [`【備品の注文】${today.getMonth() + 1}/${today.getDate()}`, ...lines].join('\n');
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast(`注文待ち${pendings.length}件をコピーしました`);
+    } catch (e) {
+        console.error(e);
+        window.prompt('コピーしてください', text);
+    }
+}
+
+async function completeAllPending() {
+    const pendings = getSortedPendings();
+    if (!pendings.length) return;
+    if (!confirm(`注文待ちの${pendings.length}件を、すべて完了にしますか？`)) return;
+    const orderedAt = new Date().toISOString();
+    const ids = pendings.map(r => r.id);
+    pendings.forEach(r => {
+        const data = { status: 'Ordered', orderedAt };
+        if (!r.itemName) Object.assign(data, itemSnapshot(r));
+        Object.assign(r, data);
+    });
+    const undo = async () => { for (const id of ids) await undoCompleteRequest(id); };
+    if (!db) {
+        saveLocalRequests();
+        render();
+        showToast(`${ids.length}件を完了にしました`, undo);
+        return;
+    }
+    try {
+        const batch = db.batch();
+        pendings.forEach(r => batch.update(db.collection("requests").doc(r.id), { status: 'Ordered', orderedAt, itemName: r.itemName || '', itemCategory: r.itemCategory || '' }));
+        await batch.commit();
+        showToast(`${ids.length}件を完了にしました`, undo);
+    } catch (e) {
+        console.error(e);
+        showToast("更新に失敗しました");
     }
 }
 
@@ -652,119 +1014,176 @@ async function removeRequest(reqId) {
 
 // Send Cart
 async function sendRequests() {
-    console.log("sendRequests called");
-    const myDrafts = state.requests.filter(r => r.status === 'Draft');
-    console.log("Draft count:", myDrafts.length);
+    if (isSending) return;
+    const drafts = state.requests.filter(r => r.status === 'Draft');
 
-    if (myDrafts.length === 0) {
+    if (drafts.length === 0) {
         showToast("申請するアイテムがありません");
         return;
     }
 
-    // Removed confirm dialog for smoother workflow
+    // 一度に確定した申請は submissionId でまとめる（TaskNote には1件のタスクとして届く）。
+    const submittedAt = new Date().toISOString();
+    const submissionId = 'sub-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+    const submittedBy = getDefaultRequesterName() || getRequesterName({ userName: state.user.name });
+    const updates = drafts.map(r => ({
+        id: r.id,
+        data: {
+            status: 'Pending',
+            timestamp: submittedAt,
+            submittedAt,
+            submissionId,
+            submittedBy,
+            ...itemSnapshot(r)
+        }
+    }));
+
+    isSending = true;
+    sendBtn.disabled = true;
 
     if (!db) {
-        myDrafts.forEach(r => r.status = 'Pending');
+        updates.forEach(u => Object.assign(state.requests.find(r => r.id === u.id), u.data));
         saveLocalRequests();
+        isSending = false;
         render();
-        showToast("申請を送信しました");
-    } else {
-        try {
-            const batch = db.batch();
-            myDrafts.forEach(r => {
-                const docRef = db.collection("requests").doc(r.id);
-                batch.update(docRef, {
-                    status: 'Pending',
-                    timestamp: new Date().toISOString(),
-                    // Update userId/userName to current one used for submission
-                    userId: state.user.uid,
-                    userName: state.user.name
-                });
-            });
-            await batch.commit();
-            showToast("申請を送信しました");
-        } catch (e) {
-            console.error("Failed to send requests:", e);
-            showToast("送信に失敗しました");
-        }
+        showToast("申請しました。注文の担当者に届きます");
+        return;
+    }
+
+    try {
+        const batch = db.batch();
+        updates.forEach(u => batch.update(db.collection("requests").doc(u.id), u.data));
+        await batch.commit();
+        showToast("申請しました。注文の担当者に届きます");
+    } catch (e) {
+        console.error("Failed to send requests:", e);
+        showToast("送信に失敗しました。もう一度お試しください");
+    } finally {
+        isSending = false;
+        renderSidebar();
     }
 }
 
 // Admin Complete
 async function completeRequest(reqId) {
-    // Admin action, always local for demo
     const req = state.requests.find(r => r.id === reqId);
-    if (req) {
-        req.status = 'Ordered';
-        req.orderedAt = new Date().toISOString();
-        if (!db) {
-            saveLocalRequests();
-            render();
-            showToast("完了しました", () => undoCompleteRequest(reqId));
-        } else {
-            try {
-                await db.collection("requests").doc(reqId).update({
-                    status: 'Ordered',
-                    orderedAt: new Date().toISOString()
-                });
-                showToast("完了しました", () => undoCompleteRequest(reqId));
-            } catch (e) {
-                console.error("Failed to complete request:", e);
-                showToast("更新に失敗しました");
-            }
-        }
+    if (!req) return;
+
+    const data = { status: 'Ordered', orderedAt: new Date().toISOString() };
+    if (!req.itemName) Object.assign(data, itemSnapshot(req));
+    Object.assign(req, data);
+
+    if (!db) {
+        saveLocalRequests();
+        render();
+        showToast("完了しました", () => undoCompleteRequest(reqId));
+        return;
+    }
+    try {
+        await db.collection("requests").doc(reqId).update(data);
+        showToast("完了しました", () => undoCompleteRequest(reqId));
+    } catch (e) {
+        console.error("Failed to complete request:", e);
+        showToast("更新に失敗しました");
     }
 }
 
 
 // --- RENDERING ---
 
-function render() {
-    const appDiv = document.getElementById('app');
-    appDiv.classList.remove('hidden');
-
-    const grid = document.getElementById('inventory-grid');
-    grid.className = 'inventory-grid'; // Reset
-    grid.classList.add(`view-${state.viewMode}`);
-
+function getFilteredItems() {
     const searchText = document.getElementById('search-input').value.toLowerCase().trim();
-    let items = [...state.inventory];
     const filterCat = state.currentFilter;
+    let items = [...state.inventory];
 
-    // Sort logic
     if (!searchText && !filterCat) {
         // Normal mode: Sort by 'order'
         items.sort((a, b) => (a.order || 0) - (b.order || 0));
     } else {
         // Filter/Search mode: Default sort (Category -> Name)
-        if (searchText) items = items.filter(i => i.name.toLowerCase().includes(searchText));
-        if (filterCat) items = items.filter(i => i.category === filterCat);
-        items.sort((a, b) => (CATEGORY_ORDER[a.category] || 99) - (CATEGORY_ORDER[b.category] || 99) || a.name.localeCompare(b.name, 'ja'));
+        if (searchText) items = items.filter(i => String(i.name || '').toLowerCase().includes(searchText));
+        if (filterCat) items = items.filter(i => (i.category || 'その他') === filterCat);
+        items.sort((a, b) => (CATEGORY_ORDER[a.category] || 99) - (CATEGORY_ORDER[b.category] || 99) || String(a.name).localeCompare(String(b.name), 'ja'));
     }
+    return { items, searchText, filterCat };
+}
+
+function renderCategoryCounts() {
+    CATEGORY_NAV.forEach(nav => {
+        const count = nav.category
+            ? state.inventory.filter(i => (i.category || 'その他') === nav.category).length
+            : state.inventory.length;
+        const el = document.getElementById(nav.countId);
+        if (el) el.textContent = String(count);
+    });
+}
+
+function getLastOrderedMap() {
+    const map = new Map();
+    state.requests.forEach(r => {
+        if (r.status !== 'Ordered' || !r.orderedAt) return;
+        const prev = map.get(r.itemId);
+        if (!prev || new Date(r.orderedAt) > new Date(prev)) map.set(r.itemId, r.orderedAt);
+    });
+    return map;
+}
+
+function render() {
+    const appDiv = document.getElementById('app');
+    appDiv.classList.remove('hidden');
+
+    grid.className = 'inventory-grid'; // Reset
+    grid.classList.add(`view-${state.viewMode}`);
+
+    const { items, searchText, filterCat } = getFilteredItems();
+    const lastOrdered = getLastOrderedMap();
+
+    renderCategoryCounts();
 
     grid.innerHTML = '';
     items.forEach(item => {
-        const pendingCount = state.requests.filter(r => r.itemId === item.id && r.status === 'Pending').length;
-        const draft = state.requests.find(r => r.itemId === item.id && r.status === 'Draft');
+        const pendings = state.requests.filter(r => r.itemId === item.id && r.status === 'Pending');
+        const draft = findDraftForItem(item.id);
+        const category = item.category || 'その他';
 
         const card = document.createElement('div');
-        card.className = `item-card cat-${item.category || 'その他'}`;
+        card.className = `item-card cat-${category}`;
         card.dataset.id = item.id; // For SortableJS
 
         if (draft) card.classList.add('selected-card');
 
-        const btnText = draft ? '<i class="fa-solid fa-check"></i> 選択済' : '選択する';
-        const btnClass = draft ? 'active' : '';
+        const draftQuantity = draft ? formatQuantity(draft) : '';
+        const stop = 'onpointerdown="event.stopPropagation()"';
+        // 選ぶと1つ入り、そのままカードの −／＋ で数を変える。急ぎ・備考は吹き出しボタンから。
+        const footerMain = draft
+            ? `<div class="card-stepper">
+                    <button type="button" class="step-btn" onclick="event.stopPropagation(); changeDraftQuantity('${item.id}', -1)" ${stop} aria-label="${(draft.quantity || 1) <= 1 ? '申請リストから外す' : '1つ減らす'}"><i class="fa-solid ${(draft.quantity || 1) <= 1 ? 'fa-trash-can' : 'fa-minus'}"></i></button>
+                    <span class="step-value">${escapeHtml(draftQuantity)}</span>
+                    <button type="button" class="step-btn" onclick="event.stopPropagation(); changeDraftQuantity('${item.id}', 1)" ${stop} aria-label="1つ増やす"><i class="fa-solid fa-plus"></i></button>
+               </div>
+               <button type="button" class="card-detail-btn ${draft.urgency === 'urgent' || draft.comment ? 'has-detail' : ''}" onclick="event.stopPropagation(); openRequestModal('${item.id}')" ${stop} title="急ぎ・備考を入れる" aria-label="急ぎ・備考を入れる"><i class="fa-regular fa-comment-dots"></i></button>`
+            : `<button type="button" class="request-toggle-btn" onclick="event.stopPropagation(); quickAddRequest('${item.id}')" ${stop}>
+                    <i class="fa-solid fa-plus"></i> 選択する
+               </button>`;
 
         // Image handling: Use image URL or placeholder icon
         const imgContent = item.imageUrl
-            ? `<img src="${item.imageUrl}" class="item-card-image" alt="${item.name}">`
+            ? `<img src="${escapeHtml(item.imageUrl)}" class="item-card-image" alt="${escapeHtml(item.name)}">`
             : `<i class="fa-solid ${getPictogram(item.name)} item-placeholder-icon"></i>`;
 
-        const statusContent = pendingCount > 0
-            ? `<div class="cart-item-badge">\u4fdd\u7559\u4e2d: ${pendingCount}\u4ef6</div>`
-            : "";
-        const uploadButtonTitle = item.imageUrl ? "\u753b\u50cf\u3092\u5909\u66f4" : "\u753b\u50cf\u3092\u767b\u9332";
+        let statusContent = '';
+        if (pendings.length === 1) {
+            const qty = formatQuantity(pendings[0]);
+            statusContent = `<div class="cart-item-badge" title="申請済みで、注文を待っています">申請中${qty ? ` ${escapeHtml(qty)}` : ''}</div>`;
+        } else if (pendings.length > 1) {
+            statusContent = `<div class="cart-item-badge" title="申請済みで、注文を待っています">申請中 ${pendings.length}件</div>`;
+        }
+
+        const lastOrderedAt = lastOrdered.get(item.id);
+        const lastOrderedContent = lastOrderedAt
+            ? `<span class="card-last-order" title="前回の注文（完了）日：${escapeHtml(formatDate(lastOrderedAt))}"><i class="fa-regular fa-clock"></i> 前回 ${escapeHtml(formatShortDate(lastOrderedAt))}</span>`
+            : '';
+        const uploadButtonTitle = item.imageUrl ? "画像を変更" : "画像を登録";
 
         card.innerHTML = `
             <div class="item-card-image-container">
@@ -774,17 +1193,16 @@ function render() {
                     <i class="fa-solid fa-camera"></i>
                 </button>
             </div>
-            <div class="card-name">${item.name}</div>
+            <div class="card-name">${escapeHtml(item.name)}</div>
             <div class="card-meta-container">
-                <div class="card-category">${item.category || '\u305d\u306e\u4ed6'}</div>
+                <span class="card-category">${escapeHtml(category)}</span>
+                ${lastOrderedContent}
             </div>
             <div class="card-status-container">
                 ${statusContent}
             </div>
             <div class="card-footer">
-                <button type="button" class="request-toggle-btn ${btnClass}" onclick="event.stopPropagation(); openRequestModal('${item.id}')" onpointerdown="event.stopPropagation()">
-                    ${btnText}
-                </button>
+                ${footerMain}
                 <div class="admin-actions">
                     <button type="button" class="card-edit-btn" onclick="event.stopPropagation(); openItemModal('${item.id}')" onpointerdown="event.stopPropagation()" title="&#21830;&#21697;&#12434;&#32232;&#38598;" aria-label="&#21830;&#21697;&#12434;&#32232;&#38598;"><i class="fa-solid fa-pen"></i></button>
                 </div>
@@ -792,6 +1210,8 @@ function render() {
         `;
         grid.appendChild(card);
     });
+
+    inventoryEmpty?.classList.toggle('hidden', items.length > 0 || state.inventory.length === 0);
 
     renderSidebar();
 
@@ -822,77 +1242,91 @@ function render() {
     }
 }
 
+function renderRequesterLine(req, extra = '') {
+    const requester = getRequesterName(req);
+    const parts = [];
+    if (requester) parts.push(`<i class="fa-regular fa-user"></i> ${escapeHtml(requester)}`);
+    if (extra) parts.push(extra);
+    return parts.length ? `<div class="cart-item-meta">${parts.join('<span class="dot">・</span>')}</div>` : '';
+}
+
 function renderSidebar() {
     requestListEl.innerHTML = '';
 
     const drafts = state.requests.filter(r => r.status === 'Draft');
-    const pendings = state.requests.filter(r => r.status === 'Pending');
+    // 申請済みは急ぎを先に、同じ急ぎ度なら申請の古い順に並べる。
+    const pendings = state.requests
+        .filter(r => r.status === 'Pending')
+        .sort((a, b) => getUrgencyRank(a.urgency) - getUrgencyRank(b.urgency)
+            || String(a.submittedAt || a.timestamp || '').localeCompare(String(b.submittedAt || b.timestamp || '')));
+
+    if (cartCount) {
+        cartCount.textContent = String(drafts.length);
+        cartCount.classList.toggle('hidden', drafts.length === 0);
+    }
+    cartSidebar.classList.toggle('has-drafts', drafts.length > 0);
+    sendBtn.disabled = drafts.length === 0 || isSending;
+    sendBtn.textContent = drafts.length > 0 ? `申請を確定（${drafts.length}品）` : '申請を確定';
 
     if (drafts.length === 0 && pendings.length === 0) {
-        requestListEl.innerHTML = `<div class="cart-empty"><i class="fa-solid fa-clipboard-list"></i><p>リストは空です</p></div>`;
-        sendBtn.disabled = true;
+        requestListEl.innerHTML = `<div class="cart-empty"><i class="fa-solid fa-clipboard-list"></i><p>リストは空です</p><p class="cart-empty-hint">備品の「選択する」を押すと、ここに入ります</p></div>`;
         return;
     }
 
-    // 1. Render Drafts
-    if (drafts.length > 0) {
-        drafts.forEach(req => {
-            const item = state.inventory.find(i => i.id === req.itemId);
-            if (!item) return;
+    // 1. Drafts (まだ確定していない申請)
+    drafts.forEach(req => {
+        const name = getRequestItemName(req) || '（削除された備品）';
+        const el = document.createElement('div');
+        el.className = 'cart-item';
+        el.innerHTML = `
+            <div class="cart-item-header">
+                <span class="cart-item-name">${escapeHtml(name)}</span>
+            </div>
+            ${renderRequestChips(req)}
+            ${renderRequesterLine(req)}
+            <div class="cart-item-comment">${escapeHtml(req.comment || '(備考なし)')}</div>
+            <div class="cart-item-actions">
+                <button type="button" class="link-btn" onclick="openRequestModal('${req.itemId}')"><i class="fa-solid fa-pen"></i> 変更</button>
+                <button type="button" class="link-btn danger" onclick="removeRequest('${req.id}')"><i class="fa-solid fa-trash"></i> 削除</button>
+            </div>
+        `;
+        requestListEl.appendChild(el);
+    });
 
+    // 2. Pending (申請済み・注文待ち)
+    if (pendings.length > 0) {
+        const pendingGroup = document.createElement('div');
+        pendingGroup.className = 'pending-group';
+        pendingGroup.innerHTML = `
+            <div class="pending-header">
+                <i class="fa-solid fa-hourglass-half"></i> 申請済み（注文待ち）${pendings.length}件
+            </div>
+            <div class="orderer-tools">
+                <button type="button" class="orderer-btn" onclick="copyOrderList()"><i class="fa-regular fa-copy"></i> リストをコピー</button>
+                <button type="button" class="orderer-btn" onclick="completeAllPending()"><i class="fa-solid fa-check-double"></i> まとめて完了</button>
+            </div>
+        `;
+
+        pendings.forEach(req => {
+            const name = getRequestItemName(req) || '（削除された備品）';
+            const submitted = formatShortDate(req.submittedAt || req.timestamp);
             const el = document.createElement('div');
-            el.className = 'cart-item';
+            el.className = 'cart-item pending-item';
             el.innerHTML = `
                 <div class="cart-item-header">
-                    <span class="cart-item-name">${item.name}</span>
+                    <span class="cart-item-name">${escapeHtml(name)}</span>
+                    <button type="button" class="icon-btn danger" onclick="removeRequest('${req.id}')" title="申請を取消し" aria-label="申請を取消し"><i class="fa-solid fa-trash"></i></button>
                 </div>
-                <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">${req.comment || '(備考なし)'}</div>
-                <div style="text-align:right; margin-top:8px;">
-                     <button onclick="openRequestModal('${item.id}')" style="font-size:0.75rem; margin-right:8px; cursor:pointer; background:none; border:none; color:#64748b;"><i class="fa-solid fa-pen"></i> 編集</button>
-                     <button onclick="removeRequest('${req.id}')" style="font-size:0.75rem; cursor:pointer; background:none; border:none; color:#ef4444;"><i class="fa-solid fa-trash"></i> 削除</button>
-                </div>
+                ${renderRequestChips(req)}
+                ${renderRequesterLine(req, submitted ? `${escapeHtml(submitted)} 申請` : '')}
+                <div class="cart-item-comment">${escapeHtml(req.comment || '(備考なし)')}</div>
+                <button type="button" class="primary-button complete-btn" onclick="completeRequest('${req.id}')">
+                    <i class="fa-solid fa-check"></i> 完了にする
+                </button>
             `;
-            requestListEl.appendChild(el);
+            pendingGroup.appendChild(el);
         });
-    }
-
-    // 2. Render Confirm Button (if drafts exist)
-    sendBtn.disabled = drafts.length === 0;
-
-    // 3. Render In Progress (Pending) Group - only if there are items with matching inventory
-    if (pendings.length > 0) {
-        // First, filter pendings to only those with matching inventory items
-        const validPendings = pendings.filter(req => state.inventory.find(i => i.id === req.itemId));
-
-        if (validPendings.length > 0) {
-            const pendingGroup = document.createElement('div');
-            pendingGroup.className = 'pending-group';
-            pendingGroup.innerHTML = `
-                <div class="pending-header" style="color: #059669;">
-                    <i class="fa-solid fa-circle-check"></i> 申請完了
-                </div>
-            `;
-
-            validPendings.forEach(req => {
-                const item = state.inventory.find(i => i.id === req.itemId);
-                // item is guaranteed to exist due to filter above
-
-                const el = document.createElement('div');
-                el.className = 'cart-item pending-item';
-                el.innerHTML = `
-                    <div class="cart-item-header">
-                        <span class="cart-item-name">${item.name}</span>
-                        <button onclick="removeRequest('${req.id}')" style="font-size:0.8rem; cursor:pointer; background:none; border:none; color:#ef4444; opacity:0.6;" title="申請を取消し"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                    <div style="font-size:0.8rem; color:#64748b; margin-top:4px;">${req.comment || '(備考なし)'}</div>
-                    <button class="primary-button" style="margin-top:12px; padding:6px; font-size:0.75rem; background:#10b981; width:100%; justify-content:center;" onclick="completeRequest('${req.id}')">
-                        <i class="fa-solid fa-check"></i> 完了にする
-                    </button>
-                `;
-                pendingGroup.appendChild(el);
-            });
-            requestListEl.appendChild(pendingGroup);
-        }
+        requestListEl.appendChild(pendingGroup);
     }
 }
 
@@ -902,7 +1336,7 @@ function showToast(msg, undoCallback = null) {
 
     if (undoCallback) {
         box.innerHTML = `
-            <span>${msg}</span>
+            <span>${escapeHtml(msg)}</span>
             <button class="undo-btn" style="margin-left:12px; background:none; border:none; color:#fca5a5; cursor:pointer; font-weight:bold; text-decoration:underline;">
                 元に戻す
             </button>
@@ -950,9 +1384,7 @@ async function undoCompleteRequest(reqId) {
 // Global Bindings for HTML access
 window.setCategoryFilter = setCategoryFilter;
 window.toggleHistory = toggleHistory;
-window.openSettingsModal = openSettingsModal;
-window.closeSettingsModal = closeSettingsModal;
-window.saveSettings = saveSettings;
+window.toggleCartSheet = toggleCartSheet;
 window.openItemModal = openItemModal;
 window.closeItemModal = closeItemModal;
 window.saveItem = saveItem;
@@ -965,10 +1397,11 @@ window.handleCardImageSelection = handleCardImageSelection;
 window.openRequestModal = openRequestModal;
 window.closeRequestModal = closeRequestModal;
 window.confirmRequest = confirmRequest;
-window.removeRequest = removeRequest;
-window.sendRequests = sendRequests;
-window.closeRequestModal = closeRequestModal;
-window.confirmRequest = confirmRequest;
+window.stepQuantity = stepQuantity;
+window.quickAddRequest = quickAddRequest;
+window.changeDraftQuantity = changeDraftQuantity;
+window.copyOrderList = copyOrderList;
+window.completeAllPending = completeAllPending;
 window.removeRequest = removeRequest;
 window.sendRequests = sendRequests;
 window.completeRequest = completeRequest;
