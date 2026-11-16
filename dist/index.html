@@ -566,18 +566,25 @@
             background: linear-gradient(135deg, #66bb6a, #2e7d32);
         }
 
+        .app-icon.supply img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .app-icon.catalog {
             background: linear-gradient(135deg, #ff9f43, #f97316);
         }
 
         .app-icon.jijogu {
-            background: #fff;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
         }
 
         .app-icon.jijogu img {
-            width: 52px;
-            height: 44px;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
+            display: block;
         }
 
         .app-icon.tasking {
@@ -589,7 +596,16 @@
         }
 
         .app-icon.cybozu {
-            background: linear-gradient(135deg, #facc15, #f97316);
+            background: #008ccf;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .app-icon.cybozu img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .app-icon.cmcystem {
@@ -597,7 +613,16 @@
         }
 
         .app-icon.maildealer {
-            background: linear-gradient(135deg, #22c55e, #0f766e);
+            background: #fff;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        .app-icon.maildealer img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
         .app-icon.favicon-icon {
@@ -1405,7 +1430,7 @@
     <div id="apps-grid" class="apps-grid hidden">
         <a href="supply/index.html" class="app-card">
             <div class="app-icon supply">
-                <i class="fa-solid fa-boxes-stacked"></i>
+                <img src="supply/supply-icon.svg" alt="" width="72" height="72">
                 <span id="supply-badge" class="notification-badge hidden">0</span>
             </div>
             <h2 class="app-title">備品管理</h2>
@@ -1420,7 +1445,7 @@
 
         <a href="jijogu/index.html" class="app-card">
             <div class="app-icon jijogu">
-                <img src="jijogu/assistive-dining.svg" alt="" width="52" height="44">
+                <img src="jijogu/jijogu-icon.svg" alt="" width="72" height="72">
                 <span id="jijogu-badge" class="notification-badge hidden">0</span>
             </div>
             <h2 class="app-title">自助具管理</h2>
@@ -1561,7 +1586,7 @@
 
         <a href="https://www.welfan.shop/login.aspx" class="app-card" target="_blank">
             <div class="app-icon logo-tile">
-                <img src="/welfan.png" alt="ウェルファン icon">
+                <img src="/welfan-icon.png" alt="ウェルファン icon">
             </div>
             <h2 class="app-title">ウェルファン</h2>
             <p class="app-desc">ウェルファンショップへアクセスします。</p>
@@ -1584,7 +1609,7 @@
 
         <a href="https://plan.caremax.co.jp/scripts/cbag/ag.exe?" class="app-card" target="_blank">
             <div class="app-icon cybozu">
-                <i class="fa-solid fa-calendar-days"></i>
+                <img src="/cybozu-office.svg" alt="サイボウズ icon">
             </div>
             <h2 class="app-title">サイボウズ</h2>
         </a>
@@ -1598,9 +1623,9 @@
 
         <a href="https://md91.maildealer.jp/app/" class="app-card" target="_blank">
             <div class="app-icon maildealer">
-                <i class="fa-solid fa-envelope-open-text"></i>
+                <img src="/rakuraku-icon.png" alt="楽楽自動応対 icon">
             </div>
-            <h2 class="app-title">メールディーラー</h2>
+            <h2 class="app-title">楽楽自動応対</h2>
         </a>
 
         <a href="https://daiwari-caremax.netlify.app/" class="app-card" target="_blank" rel="noopener noreferrer">
