@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>展示会備品 | CareMax Platform</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="../auth.js"></script>
+    <script>
+        // The demo (?demo=1) runs without a portal login; everything else needs one.
+        if (!/[?&]demo=1(&|$)/.test(location.search) && typeof checkAuth === 'function') checkAuth();
+    </script>
+</head>
+
+<body>
+    <div id="demo-banner" class="demo-banner" hidden>
+        <span><strong>デモ</strong>｜架空のデータです。このブラウザの中だけに保存されます。</span>
+        <button type="button" data-act="demo-reset">リセット</button>
+    </div>
+
+    <header class="app-header">
+        <div class="header-inner">
+            <a class="brand" href="../index.html" title="TOPへ戻る">
+                <span class="brand-icon"><img src="exhibit-icon.svg" alt="" width="42" height="42"></span>
+                <span class="brand-text"><span class="brand-crumb">企画部ポータル ›</span><span class="brand-name">展示会備品</span></span>
+            </a>
+            <nav class="tabs" aria-label="画面の切り替え">
+                <a href="#/items" class="tab" data-tab="items"><i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>備品</a>
+                <a href="#/history" class="tab" data-tab="history"><i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>履歴</a>
+                <a href="#/settings" class="tab" data-tab="settings"><i class="fa-solid fa-sliders" aria-hidden="true"></i>設定</a>
+            </nav>
+            <div class="header-actions" id="header-actions" hidden>
+                <button type="button" class="btn btn-ghost" data-act="new-item" aria-label="備品登録"><i class="fa-solid fa-plus" aria-hidden="true"></i><span>登録</span></button>
+                <button type="button" class="btn btn-primary" data-act="out"><i class="fa-solid fa-truck-ramp-box" aria-hidden="true"></i><span>出庫</span><span class="count" id="out-count"></span></button>
+                <button type="button" class="btn btn-primary alt" data-act="return"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i><span>返却</span><span class="count" id="return-count"></span></button>
+            </div>
+            <div class="user-chip" id="user-chip"></div>
+        </div>
+    </header>
+
+    <div id="gate" class="gate" role="status"></div>
+
+    <main id="main" class="main" hidden>
+        <section id="view-items" class="view" aria-label="備品一覧">
+            <div class="stats" id="attention" role="group" aria-label="まとめ"></div>
+            <div class="toolbar">
+                <div class="filters">
+                    <select id="f-area" aria-label="場所で絞り込み"></select>
+                    <label class="search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="f-keyword" placeholder="備品名で検索" aria-label="備品名で検索"></label>
+                    <span id="filter-note"></span>
+                </div>
+            </div>
+            <div class="selection-bar" id="selection-bar" hidden></div>
+            <div id="items-results"></div>
+        </section>
+
+        <section id="view-history" class="view" aria-label="履歴" hidden>
+            <div class="toolbar history-filters">
+                <div class="filters">
+                    <label class="field-inline"><input type="date" id="h-from" aria-label="期間の開始"><span>〜</span><input type="date" id="h-to" aria-label="期間の終了"></label>
+                    <select id="h-action" aria-label="操作で絞り込み"></select>
+                    <label class="search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><input type="search" id="h-keyword" placeholder="備品名・メモ・操作者" aria-label="履歴を検索"></label>
+                </div>
+                <button type="button" class="btn" data-act="history-csv"><i class="fa-solid fa-file-csv" aria-hidden="true"></i>CSV</button>
+            </div>
+            <div id="history-results"></div>
+        </section>
+
+        <section id="view-settings" class="view" aria-label="設定" hidden></section>
+    </main>
+
+    <div id="modal-root"></div>
+    <div id="print-root"></div>
+    <div id="toast-area" class="toast-area" aria-live="polite"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="logic.js"></script>
+    <script src="store.js"></script>
+    <script src="demo-data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

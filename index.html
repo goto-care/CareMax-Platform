@@ -580,6 +580,16 @@
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
         }
 
+        .app-icon.exhibit {
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+        }
+
+        .app-icon.exhibit img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
         .app-icon.jijogu img {
             width: 100%;
             height: 100%;
@@ -1452,6 +1462,15 @@
             <p class="app-desc">貸出機器のトラッキングと返却管理を一元化します。</p>
         </a>
 
+        <a href="exhibit/index.html" class="app-card">
+            <div class="app-icon exhibit">
+                <img src="exhibit/exhibit-icon.svg" alt="" width="72" height="72">
+                <span id="exhibit-badge" class="notification-badge hidden">0</span>
+            </div>
+            <h2 class="app-title">展示会備品</h2>
+            <p class="app-desc">展示会備品の現在地・予約・出庫と返却をまとめて管理します。</p>
+        </a>
+
         <a href="https://tasking-caremax.netlify.app/" class="app-card" target="_blank">
             <div class="app-icon tasking">
                 <i class="fa-solid fa-crown"></i>
@@ -1716,7 +1735,7 @@
 
         const db = firebase.firestore();
         db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn(e));
-        const launcherBadgeCounts = { supply: 0, jijogu: 0 };
+        const launcherBadgeCounts = { supply: 0, jijogu: 0, exhibit: 0 };
 
         // Auth State Observer
         auth.onAuthStateChanged((user) => {
@@ -1850,6 +1869,7 @@
             // Hide badges when logged out
             setNotificationBadge('supply', 0);
             setNotificationBadge('jijogu', 0);
+            setNotificationBadge('exhibit', 0);
 
             localStorage.removeItem('caremax-user');
         }
@@ -1887,6 +1907,12 @@
                     setNotificationBadge('jijogu', 0);
                 }
             } catch (e) { console.warn('Jijogu badge error:', e); }
+
+            // 展示会備品: items needing action (late returns, double bookings, shipping soon), saved by that page.
+            try {
+                const exhibitAlerts = JSON.parse(localStorage.getItem('caremax-exhibit-alerts') || 'null');
+                setNotificationBadge('exhibit', exhibitAlerts && Number(exhibitAlerts.count) > 0 ? Number(exhibitAlerts.count) : 0);
+            } catch (e) { console.warn('Exhibit badge error:', e); }
         }
 
         function getKaientaiLetter(title) {
@@ -1935,6 +1961,7 @@
                 if (normalizedHref.includes('supply/')) return 'supply';
                 if (normalizedHref.includes('catalog/')) return 'catalog';
                 if (normalizedHref.includes('jijogu/')) return 'jijogu';
+                if (normalizedHref.includes('exhibit/')) return 'exhibit';
                 if (normalizedHref.includes('tasking-caremax')) return 'tasking';
                 return `app-${index}`;
             }
@@ -1942,7 +1969,7 @@
             function getCardGroups(title, href) {
                 const groups = [];
                 if (getKaientaiLetter(title)) groups.push('kaientai');
-                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/')) groups.push('management');
+                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
                 return Array.from(new Set(groups.length ? groups : ['management']));
             }
 
@@ -1954,7 +1981,8 @@
                 const iconEl = card.querySelector('.app-icon');
                 const badgeType = card.querySelector('#supply-badge') ? 'supply'
                     : card.querySelector('#jijogu-badge') ? 'jijogu'
-                        : '';
+                        : card.querySelector('#exhibit-badge') ? 'exhibit'
+                            : '';
                 const letter = getKaientaiLetter(title);
                 const groups = getCardGroups(title, href);
                 const id = makeAppId(title, href, index);
@@ -2319,6 +2347,7 @@
                 if (normalizedHref.includes('supply/')) return 'supply';
                 if (normalizedHref.includes('catalog/')) return 'catalog';
                 if (normalizedHref.includes('jijogu/')) return 'jijogu';
+                if (normalizedHref.includes('exhibit/')) return 'exhibit';
                 if (normalizedHref.includes('tasking-caremax')) return 'tasking';
                 return `app-${index}`;
             }
@@ -2326,7 +2355,7 @@
             function getCardGroups(title, href) {
                 const groups = [];
                 if (getKaientaiLetter(title)) groups.push('kaientai');
-                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/')) groups.push('management');
+                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
                 return Array.from(new Set(groups.length ? groups : ['management']));
             }
 
@@ -2341,7 +2370,8 @@
                 const iconEl = card.querySelector('.app-icon');
                 const badgeType = card.querySelector('#supply-badge') ? 'supply'
                     : card.querySelector('#jijogu-badge') ? 'jijogu'
-                        : '';
+                        : card.querySelector('#exhibit-badge') ? 'exhibit'
+                            : '';
                 const letter = getKaientaiLetter(title);
                 const groups = getCardGroups(title, href);
                 const id = makeAppId(title, href, index);
