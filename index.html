@@ -1468,7 +1468,7 @@
                 <span id="exhibit-badge" class="notification-badge hidden">0</span>
             </div>
             <h2 class="app-title">展示会備品</h2>
-            <p class="app-desc">展示会備品の現在地・予約・出庫と返却をまとめて管理します。</p>
+            <p class="app-desc">展示会備品の数と貸出先、出庫・返却をまとめて管理します。</p>
         </a>
 
         <a href="https://tasking-caremax.netlify.app/" class="app-card" target="_blank">
@@ -1908,7 +1908,7 @@
                 }
             } catch (e) { console.warn('Jijogu badge error:', e); }
 
-            // 展示会備品: items needing action (late returns, double bookings, shipping soon), saved by that page.
+            // 展示会備品: items that are overdue or need restocking, saved by that page.
             try {
                 const exhibitAlerts = JSON.parse(localStorage.getItem('caremax-exhibit-alerts') || 'null');
                 setNotificationBadge('exhibit', exhibitAlerts && Number(exhibitAlerts.count) > 0 ? Number(exhibitAlerts.count) : 0);
