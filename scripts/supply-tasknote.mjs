@@ -16,7 +16,9 @@
 //                                                     テスト用。Firestore の代わりに file.json の申請を使う
 //                                                     （{ "requests": [...], "inventory": [...] } の形）
 //
-// Firestore は、備品管理のページと同じく Firebase の匿名ログインで読む。
+// Firestore は Firebase の匿名ログインで読む。
+// （備品管理のページは 2026-11-25 から会社のGoogleログインだけで、匿名ログインはこのスクリプトだけが使う。
+//   Firestore のルールで匿名ログインを止めると、このスクリプトは読めなくなる。）
 // 最初の1回だけ匿名ユーザーを作り、その更新用トークンを Documents\TaskNote\.supply-state.json に残して使い回す。
 
 import fs from 'node:fs'

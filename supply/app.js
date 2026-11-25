@@ -1,19 +1,16 @@
 // Firebase Compat SDK (loaded via <script> tags in HTML)
 // No import statements needed - Firebase is available globally
 
-// --- FIREBASE CONFIGURATION ---
-const firebaseConfig = {
-    apiKey: "AIzaSyDFoI20EpiXp6VV8N0SyJdmkEcK2_cZLLA",
-    authDomain: "kikakubu-portal.firebaseapp.com",
-    projectId: "kikakubu-portal",
-    storageBucket: "kikakubu-portal.firebasestorage.app",
-    messagingSenderId: "165113957756",
-    appId: "1:165113957756:web:1043443ba7c3b32395a8f9"
-};
-// ------------------------------
+// firebaseConfig, isCompanyEmail and the portal login gate come from ../auth.js (loaded in <head>).
 
 // ?demo=1 : お試しモード。Firestore につながず、このブラウザの中だけで動く（画面の確認用）。
+// ログインなしで開けるのはこのPCの手元のサーバーだけ（../auth.js が決める）。
 const DEMO_MODE = new URLSearchParams(location.search).has('demo');
+
+// Only company Google accounts can use the page.
+function isCompanyAccount(user) {
+    return !!user && !user.isAnonymous && isCompanyEmail(user.email);
+}
 
 // Initialize Firebase
 let app, auth, db;
@@ -256,10 +253,9 @@ function init() {
         loadLocalData();
         render();
     } else {
-        // Anonymous Login for Collaborative Editing
-        // Auth Logic: Check if already logged in (e.g. from Top Page), otherwise Anon
+        // Use the company Google login from the portal (TOP page). Without it, go back to the portal to sign in.
         auth.onAuthStateChanged((user) => {
-            if (user) {
+            if (isCompanyAccount(user)) {
                 console.log("Connected as:", user.uid);
                 // Update state with real user info
                 state.user = {
@@ -277,11 +273,8 @@ function init() {
                 initFirebaseListeners();
                 render();
             } else {
-                // No user found -> Fallback to Anonymous
-                console.log("No user found, signing in anonymously...");
-                auth.signInAnonymously().catch((error) => {
-                    console.error("Anonymous login failed:", error);
-                });
+                // Not signed in with a company Google account (no login, an old anonymous login, or an outside account)
+                window.location.href = '../index.html';
             }
         });
 

@@ -134,11 +134,19 @@
         }
 
         #loading,
-        #google-login-btn,
-        #demo-login-btn {
+        .login-actions {
             grid-column: 2;
             grid-row: 1;
             justify-self: end;
+        }
+
+        /* ログインのボタンの置き場所（右上。スマホではロゴの下） */
+        .login-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .user-avatar {
@@ -796,6 +804,17 @@
                 padding: 22px 18px;
             }
 
+            #loading,
+            .login-actions {
+                grid-column: 1;
+                grid-row: auto;
+                justify-self: start;
+            }
+
+            .login-actions {
+                justify-content: flex-start;
+            }
+
             .logo-large {
                 font-size: 2rem;
                 flex-wrap: wrap;
@@ -1414,6 +1433,23 @@
             color: rgba(255, 255, 255, 0.1);
         }
 
+        /* 定着したアプリのキラキラ（左上） */
+        .az-panel .az-sparkle {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 20px;
+            height: 20px;
+            color: #fde047;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
+            display: flex;
+        }
+
+        .az-panel .az-sparkle svg {
+            width: 100%;
+            height: 100%;
+        }
+
         #platform-logo {
             cursor: pointer;
             user-select: none;
@@ -1429,15 +1465,10 @@
 
         <div id="loading" class="loading">読み込み中...</div>
 
-        <button id="google-login-btn" class="google-btn hidden" onclick="signInWithGoogle()"
-            style="margin-bottom: 24px;">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
-            Googleアカウントでログイン
-        </button>
-
-        <div id="demo-login-btn" class="hidden" style="margin-top: 10px;">
-            <button class="google-btn" onclick="signInDemo()" style="background: #f1f5f9; color: #475569;">
-                <i class="fa-solid fa-user-gear"></i> デモユーザーで試用する
+        <div class="login-actions">
+            <button id="google-login-btn" class="google-btn hidden" onclick="signInWithGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Googleアカウントでログイン
             </button>
         </div>
 
@@ -1756,36 +1787,41 @@
         db.enablePersistence({ synchronizeTabs: true }).catch(e => console.warn(e));
         const launcherBadgeCounts = { supply: 0, jijogu: 0, exhibit: 0 };
 
+        // Only company Google accounts can use the portal.
+        const ALLOWED_EMAIL_DOMAINS = ['caremax.co.jp', 'g.caremax.co.jp'];
+
+        function isCompanyAccount(user) {
+            if (!user || user.isAnonymous || !user.email) return false;
+            const domain = String(user.email).split('@').pop().toLowerCase();
+            return ALLOWED_EMAIL_DOMAINS.includes(domain);
+        }
+
         // Auth State Observer
         auth.onAuthStateChanged((user) => {
             const loading = document.getElementById('loading');
             if (loading) loading.classList.add('hidden');
 
-            if (user) {
+            if (isCompanyAccount(user)) {
                 showLoggedInState(user);
-            } else {
-                // Check for demo user
-                const localUser = localStorage.getItem('caremax-user');
-                if (localUser) {
-                    try {
-                        const parsed = JSON.parse(localUser);
-                        if (parsed.isDemo) {
-                            showLoggedInState(parsed);
-                            return;
-                        }
-                    } catch (e) { }
-                }
-                showLoggedOutState();
+                return;
             }
+
+            if (user) {
+                // A Google account outside the company, or an old anonymous login from 備品管理: sign it out.
+                if (!user.isAnonymous) {
+                    alert(`${user.email} ではログインできません。会社のGoogleアカウントでログインしてください。`);
+                }
+                auth.signOut().catch((error) => console.error('Sign out error:', error));
+            }
+            // Not signed in with Google. This also clears a leftover login from the old demo button.
+            showLoggedOutState();
         });
 
         function signInWithGoogle() {
             const btn = document.getElementById('google-login-btn');
-            const demoBtn = document.getElementById('demo-login-btn');
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ログイン中...';
-            if (demoBtn) demoBtn.classList.add('hidden');
 
             // Open directly during the tap event so Safari keeps user activation.
             // Firebase already defaults to LOCAL persistence in web browsers.
@@ -1805,27 +1841,7 @@
                 });
         }
 
-        function signInDemo() {
-            const demoUser = {
-                uid: 'demo-user-' + Date.now(),
-                displayName: 'デモ管理者',
-                email: 'demo@caremax.local',
-                photoURL: null,
-                isDemo: true
-            };
-            showLoggedInState(demoUser);
-        }
-
         function signOutUser() {
-            const userJson = localStorage.getItem('caremax-user');
-            if (userJson) {
-                const user = JSON.parse(userJson);
-                if (user.isDemo) {
-                    showLoggedOutState();
-                    return;
-                }
-            }
-
             auth.signOut()
                 .then(() => {
                     // console.log('Signed out');
@@ -1838,20 +1854,15 @@
 
         function resetLoginButton() {
             const btn = document.getElementById('google-login-btn');
-            const demoBtn = document.getElementById('demo-login-btn');
             if (btn) {
                 btn.disabled = false;
                 btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Googleアカウントでログイン';
                 btn.classList.remove('hidden');
             }
-            if (demoBtn) {
-                demoBtn.classList.remove('hidden');
-            }
         }
 
         function showLoggedInState(user) {
             document.getElementById('google-login-btn')?.classList.add('hidden');
-            document.getElementById('demo-login-btn')?.classList.add('hidden');
             document.getElementById('user-info')?.classList.add('show');
             document.getElementById('apps-grid')?.classList.remove('hidden');
 
@@ -1872,8 +1883,7 @@
                 uid: user.uid,
                 displayName: user.displayName,
                 email: user.email,
-                photoURL: user.photoURL,
-                isDemo: user.isDemo || false
+                photoURL: user.photoURL
             }));
 
             // Update notification badges
@@ -2984,6 +2994,10 @@
                 'Z': 'linear-gradient(135deg, #10b981, #0f766e)'
             };
 
+            // 定着したアプリ（左上にキラキラを付ける）。増えたらここに文字を足す。
+            const establishedLetters = ['D', 'I', 'X', 'Z'];
+            const sparkleSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2zm-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6z"/></svg>';
+
             function buildAZGrid() {
                 const grid = document.getElementById('az-grid');
                 grid.innerHTML = '';
@@ -3042,7 +3056,11 @@
                         const iconPart = releasedMap[ch].icon
                             ? `<span class="az-icon">${releasedMap[ch].icon}</span>`
                             : `<span class="letter">${ch}</span>`;
+                        const sparklePart = establishedLetters.includes(ch)
+                            ? `<span class="az-sparkle" aria-hidden="true">${sparkleSVG}</span>`
+                            : '';
                         panel.innerHTML = `
+                            ${sparklePart}
                             ${iconPart}
                             <span class="app-name">${releasedMap[ch].name}</span>
                         `;

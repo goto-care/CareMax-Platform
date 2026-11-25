@@ -11,11 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <script src="../auth.js"></script>
-    <script>
-        // The demo (?demo=1) runs without a portal login; everything else needs one.
-        if (!/[?&]demo=1(&|$)/.test(location.search) && typeof checkAuth === 'function') checkAuth();
-    </script>
+    <!-- Shows the page only after a portal login (the ?demo=1 demo opens without one only on the local server). -->
+    <script src="../auth.js?v=login-gate-20261125"></script>
 </head>
 
 <body>
