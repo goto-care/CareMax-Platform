@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Kaientai-Y 年間スケジュール | CareMax Platform</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="../auth.js"></script>
+    <script>
+        // The demo (?demo=1) runs without a portal login; everything else needs one.
+        if (!/[?&]demo=1(&|$)/.test(location.search) && typeof checkAuth === 'function') checkAuth();
+    </script>
+</head>
+
+<body>
+<div class="wrap">
+  <header class="head">
+    <a class="brand" href="../index.html" title="TOPへ戻る">
+      <span class="brand-icon"><img src="schedule-icon.svg" alt="" width="44" height="44"></span>
+      <span class="brand-text"><span class="brand-crumb">企画部ポータル ›</span><span class="brand-name">Kaientai-Y</span></span>
+    </a>
+    <h1>年間スケジュール</h1>
+    <p class="lead">バーを押すと中の作業が開き、作業を押すと「やること」が開きます。内容はこの画面で直せます。「毎年」くり返すスケジュールと、その年だけのスケジュールを登録できます。</p>
+  </header>
+
+  <section class="now" aria-label="今月と次の予定">
+    <div class="now-card">
+      <h2 id="now-title">今月</h2>
+      <ul class="now-list" id="now-list"></ul>
+      <p class="now-empty" id="now-empty" hidden>今月の予定は登録されていません。</p>
+      <p class="late-head" id="late-head" hidden>時期を過ぎて、まだ「済」になっていない作業</p>
+      <ul class="now-list" id="late-list"></ul>
+      <p class="late-more" id="late-more" hidden></p>
+    </div>
+    <div class="now-card">
+      <h2>次の予定</h2>
+      <ul class="now-list" id="next-list"></ul>
+      <p class="now-empty" id="next-empty" hidden>この先の予定は登録されていません。</p>
+    </div>
+  </section>
+
+  <section class="panel" aria-label="年間スケジュール">
+    <div class="panel-head">
+      <div class="years" id="years" aria-label="年の切り替え"></div>
+      <div class="actions" id="actions"></div>
+    </div>
+    <div class="legend" aria-label="凡例">
+      <span><i class="lg-bar"></i>期間</span>
+      <span><i class="lg-dot"></i>時期</span>
+      <span><i class="lg-dia"></i>締切（〜まで）</span>
+      <span><i class="lg-prev"></i>前の年からのつづき</span>
+      <span><i class="lg-today"></i>今日</span>
+    </div>
+    <div class="notice" id="notice" hidden></div>
+    <div class="sched-scroll" id="sched-scroll">
+      <div class="sched" id="sched"></div>
+    </div>
+    <p class="hint" id="hint"></p>
+  </section>
+
+  <footer class="foot">
+    <p>印の位置は、月と「初め・上旬・中旬・下旬・末」からおおよそで置いています。日付で指定した印は、その日の位置に出ます。</p>
+    <p>12月より先（翌年の1月など）まで続くスケジュールは、右に「翌年」の列がのびます。</p>
+  </footer>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title"><form id="dlg-form" novalidate></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
