@@ -100,17 +100,18 @@
   function daysBetween(a, b) { return Math.round((b - a) / DAY_MS); }
 
   /**
+   * 近い予定を近い順に並べる（1つの工程からは、いちばん近い1件だけ）。
    * planDocs: [{ id, data }]（schedule_plans）、progDocs: [{ id, data }]（schedule_progress）
-   * 返り値：{ when, title, plan, badge, y, pid, gid, tid } か、予定が無ければ null
+   * 返り値：[{ when, title, plan, badge, days, y, pid, gid, tid }]。days は今日から何日先か（今の時期・今日は 0）
    */
-  function findNext(planDocs, progDocs, now) {
+  function findUpcoming(planDocs, progDocs, now, limit) {
     now = now || new Date();
     var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     var docs = arr(planDocs).map(function (d) { return { id: d.id, data: normDoc(d.data) }; });
     var prog = {};
     arr(progDocs).forEach(function (x) { if (x && x.data && typeof x.data === 'object') prog[x.id] = x.data; });
 
-    var best = null;
+    var byTask = {}, seq = 0;
     [today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1].forEach(function (y) {
       yearDocs(docs, y).forEach(function (d) {
         d.data.groups.forEach(function (g) {
@@ -133,18 +134,25 @@
               } else {
                 return; // もう始まっている期間（バー）
               }
-              if (best && (key > best.key || (+key === +best.key && d.data.order >= best.order))) return;
-              best = { key: key, order: d.data.order, when: whenText(k, y),
+              var id = [y, d.id, g.id, t.id].join('|'), cur = byTask[id];
+              if (cur && cur.key <= key) return;
+              byTask[id] = { key: key, order: d.data.order, seq: cur ? cur.seq : seq++, when: whenText(k, y),
                 title: t.title + (k.what ? ' ' + k.what : ''), plan: d.data.name, badge: badge,
-                y: y, pid: d.id, gid: g.id, tid: t.id };
+                days: daysBetween(today, key), y: y, pid: d.id, gid: g.id, tid: t.id };
             });
           });
         });
       });
     });
-    if (best) delete best.key;
-    if (best) delete best.order;
-    return best;
+    var list = Object.keys(byTask).map(function (id) { return byTask[id]; });
+    list.sort(function (a, b) { return (a.key - b.key) || (a.order - b.order) || (a.seq - b.seq); });
+    if (limit) list = list.slice(0, limit);
+    return list.map(function (it) { delete it.key; delete it.order; delete it.seq; return it; });
+  }
+
+  // いちばん近い1件（無ければ null）
+  function findNext(planDocs, progDocs, now) {
+    return findUpcoming(planDocs, progDocs, now, 1)[0] || null;
   }
 
   // 年間スケジュールの画面で、その工程を開くためのリンク
@@ -153,5 +161,5 @@
       [item.y, item.pid, item.gid, item.tid].map(encodeURIComponent).join('/');
   }
 
-  global.ScheduleNext = { findNext: findNext, linkTo: linkTo };
+  global.ScheduleNext = { findUpcoming: findUpcoming, findNext: findNext, linkTo: linkTo };
 })(window);

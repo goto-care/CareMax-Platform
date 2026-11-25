@@ -141,25 +141,145 @@
             justify-self: end;
         }
 
-        /* ヘッダーの真ん中：年間スケジュール（Kaientai-Y）の次の予定 */
-        .next-schedule {
+        /* ヘッダーの真ん中：年間スケジュール（Kaientai-Y）の次の予定（＋同じ週のほかの予定の数） */
+        .next-schedule-wrap {
             grid-column: 2;
             grid-row: 1;
             justify-self: center;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
+            position: relative;
             max-width: 100%;
             min-width: 0;
-            padding: 8px 10px 8px 14px;
+        }
+
+        .next-schedule {
+            display: flex;
+            align-items: stretch;
+            max-width: 100%;
+            min-width: 0;
             border-radius: 999px;
             background: rgba(255, 255, 255, 0.95);
             color: #3c3489;
             font-size: 0.95rem;
-            text-decoration: none;
             box-shadow: 0 6px 18px rgba(30, 27, 75, 0.18);
             transition: transform 0.2s, box-shadow 0.2s;
             overflow: hidden;
+        }
+
+        .next-schedule:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(30, 27, 75, 0.24);
+        }
+
+        .next-schedule .ns-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            padding: 8px 10px 8px 14px;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .next-schedule .ns-more {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: none;
+            border-left: 1px solid #e4defc;
+            background: transparent;
+            color: #5b21b6;
+            font: inherit;
+            font-size: 0.8rem;
+            font-weight: 700;
+            padding: 0 14px 0 10px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .next-schedule .ns-more:hover,
+        .next-schedule .ns-more[aria-expanded="true"] {
+            background: #f5f3ff;
+        }
+
+        .next-schedule .ns-more i {
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+
+        .next-schedule .ns-more[aria-expanded="true"] i {
+            transform: rotate(180deg);
+        }
+
+        /* 「ほかN件」を押すと開く、近い予定の一覧 */
+        .ns-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(440px, calc(100vw - 32px));
+            padding: 6px;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 18px 40px rgba(30, 27, 75, 0.25);
+            z-index: 1000;
+        }
+
+        .ns-menu .nm-item {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 10px;
+            color: #1e1b4b;
+            text-decoration: none;
+            font-size: 0.88rem;
+        }
+
+        .ns-menu .nm-item:hover,
+        .ns-menu .nm-item:focus-visible {
+            background: #f5f3ff;
+            outline: none;
+        }
+
+        .ns-menu .nm-when {
+            font-weight: 700;
+            color: #3c3489;
+            white-space: nowrap;
+        }
+
+        .ns-menu .nm-title {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ns-menu .nm-badge {
+            white-space: nowrap;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #ede9fe;
+            color: #5b21b6;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .ns-menu .nm-all {
+            display: block;
+            margin-top: 4px;
+            padding: 9px 10px;
+            border-top: 1px solid #ede9fe;
+            color: #6d28d9;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .ns-menu .nm-all:hover {
+            text-decoration: underline;
         }
 
         /* 幅が足りないときは、次の予定をロゴの下の行に出す */
@@ -168,16 +288,16 @@
                 row-gap: 12px;
             }
 
-            .next-schedule {
+            .next-schedule-wrap {
                 grid-column: 1 / -1;
                 grid-row: 2;
                 justify-self: start;
             }
-        }
 
-        .next-schedule:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 10px 24px rgba(30, 27, 75, 0.24);
+            .ns-menu {
+                left: 0;
+                transform: none;
+            }
         }
 
         .next-schedule .ns-icon {
@@ -895,11 +1015,22 @@
                 display: none;
             }
 
-            .next-schedule {
+            .next-schedule-wrap {
                 grid-column: 1 / -1;
                 grid-row: 2;
                 justify-self: stretch;
+            }
+
+            .next-schedule {
                 font-size: 0.9rem;
+            }
+
+            .next-schedule .ns-main {
+                flex: 1;
+            }
+
+            .ns-menu {
+                width: 100%;
             }
 
             .logo-large {
@@ -1551,12 +1682,18 @@
         <p class="tagline">業務管理を、もっとスマートに。</p>
 
         <!-- 年間スケジュール（Kaientai-Y）の次の予定。ログイン後に schedule/next.js で選んで出す -->
-        <a id="next-schedule" class="next-schedule hidden" href="schedule/index.html">
-            <i class="fa-regular fa-calendar ns-icon" aria-hidden="true"></i>
-            <span class="ns-when"></span>
-            <span class="ns-title"></span>
-            <span class="ns-badge"></span>
-        </a>
+        <div id="next-schedule" class="next-schedule-wrap hidden">
+            <div class="next-schedule">
+                <a class="ns-main" href="schedule/index.html">
+                    <i class="fa-regular fa-calendar ns-icon" aria-hidden="true"></i>
+                    <span class="ns-when"></span>
+                    <span class="ns-title"></span>
+                    <span class="ns-badge"></span>
+                </a>
+                <button type="button" class="ns-more hidden" aria-expanded="false" aria-controls="next-schedule-menu"></button>
+            </div>
+            <div id="next-schedule-menu" class="ns-menu hidden" aria-label="近い予定"></div>
+        </div>
 
         <div id="loading" class="loading">読み込み中...</div>
 
@@ -1861,7 +1998,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="schedule/next.js?v=20261125"></script>
+    <script src="schedule/next.js?v=20261125-2"></script>
 
     <script>
         // Firebase Configuration
@@ -1988,51 +2125,128 @@
             loadNextSchedule();
         }
 
-        // ヘッダーの「次の予定」：年間スケジュール（schedule_plans・schedule_progress）から1件選んで出す
-        let nextScheduleLoadedAt = 0;
+        // ヘッダーの「次の予定」：年間スケジュール（schedule_plans・schedule_progress）から選んで出す。
+        // Firestore の変更を見張っているので、年間スケジュールで「済」にすると、その場で次の予定に替わる。
+        const NEXT_MENU_LIMIT = 5;
+        const nextSchedule = { plans: null, progress: null, stop: [] };
+
+        function closeNextMenu() {
+            document.getElementById('next-schedule-menu')?.classList.add('hidden');
+            document.querySelector('#next-schedule .ns-more')?.setAttribute('aria-expanded', 'false');
+        }
 
         function hideNextSchedule() {
+            closeNextMenu();
             document.getElementById('next-schedule')?.classList.add('hidden');
         }
 
-        function loadNextSchedule() {
-            const el = document.getElementById('next-schedule');
-            if (!el || !window.ScheduleNext || !auth.currentUser) return;
-            nextScheduleLoadedAt = Date.now();
-            const pack = (snap) => snap.docs.map((d) => ({ id: d.id, data: d.data() }));
-            Promise.all([
-                db.collection('schedule_plans').get(),
-                db.collection('schedule_progress').get()
-            ]).then(([plans, progress]) => {
-                if (!auth.currentUser) return;
-                const item = window.ScheduleNext.findNext(pack(plans), pack(progress));
-                if (!item) {
-                    hideNextSchedule();
-                    return;
-                }
-                el.querySelector('.ns-when').textContent = item.when;
-                el.querySelector('.ns-title').textContent = item.title;
-                el.querySelector('.ns-badge').textContent = item.badge;
-                el.href = window.ScheduleNext.linkTo(item);
-                el.title = `${item.plan}：${item.title}（${item.when}）`;
-                el.setAttribute('aria-label', `次の予定 ${item.when} ${item.title} ${item.badge}`);
-                el.classList.remove('hidden');
-            }).catch((error) => {
-                console.warn('Next schedule unavailable:', error);
-                hideNextSchedule();
-            });
+        function stopNextSchedule() {
+            nextSchedule.stop.forEach((stop) => stop());
+            nextSchedule.stop = [];
+            nextSchedule.plans = null;
+            nextSchedule.progress = null;
+            hideNextSchedule();
         }
 
-        // 開いたままの日が続いても古くならないよう、画面に戻ったときに読み直す（10分に1回まで）
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && auth.currentUser && Date.now() - nextScheduleLoadedAt > 10 * 60 * 1000) {
-                loadNextSchedule();
+        function loadNextSchedule() {
+            if (!window.ScheduleNext || !auth.currentUser || nextSchedule.stop.length) return;
+            const pack = (snap) => snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+            const fail = (error) => {
+                console.warn('Next schedule unavailable:', error);
+                stopNextSchedule();
+            };
+            nextSchedule.stop = [
+                db.collection('schedule_plans').onSnapshot((snap) => {
+                    nextSchedule.plans = pack(snap);
+                    renderNextSchedule();
+                }, fail),
+                db.collection('schedule_progress').onSnapshot((snap) => {
+                    nextSchedule.progress = pack(snap);
+                    renderNextSchedule();
+                }, fail)
+            ];
+        }
+
+        function renderNextSchedule() {
+            const wrap = document.getElementById('next-schedule');
+            if (!wrap || !nextSchedule.plans || !nextSchedule.progress) return;
+            const items = window.ScheduleNext.findUpcoming(nextSchedule.plans, nextSchedule.progress);
+            if (!items.length) {
+                hideNextSchedule();
+                return;
             }
+
+            const first = items[0];
+            const main = wrap.querySelector('.ns-main');
+            main.querySelector('.ns-when').textContent = first.when;
+            main.querySelector('.ns-title').textContent = first.title;
+            main.querySelector('.ns-badge').textContent = first.badge;
+            main.href = window.ScheduleNext.linkTo(first);
+            main.title = `${first.plan}：${first.title}（${first.when}）`;
+            main.setAttribute('aria-label', `次の予定 ${first.when} ${first.title} ${first.badge}`);
+
+            // 同じ週（いちばん近い予定から7日の間）にあるほかの予定の数
+            const others = items.slice(1).filter((it) => it.days - first.days <= 6).length;
+            const more = wrap.querySelector('.ns-more');
+            more.innerHTML = `ほか${others}件 <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>`;
+            more.setAttribute('aria-label', `同じ週のほかの予定 ${others}件。近い予定の一覧を開く`);
+            more.classList.toggle('hidden', others === 0);
+            if (!others) closeNextMenu();
+
+            // 「ほかN件」を押すと開く一覧：近い予定を5件まで
+            const menu = document.getElementById('next-schedule-menu');
+            menu.innerHTML = '';
+            items.slice(0, NEXT_MENU_LIMIT).forEach((it) => {
+                const a = document.createElement('a');
+                a.className = 'nm-item';
+                a.href = window.ScheduleNext.linkTo(it);
+                a.title = `${it.plan}：${it.title}（${it.when}）`;
+                [['nm-when', it.when], ['nm-title', it.title], ['nm-badge', it.badge]].forEach(([cls, text]) => {
+                    const span = document.createElement('span');
+                    span.className = cls;
+                    span.textContent = text;
+                    a.appendChild(span);
+                });
+                menu.appendChild(a);
+            });
+            const all = document.createElement('a');
+            all.className = 'nm-all';
+            all.href = 'schedule/index.html';
+            all.textContent = '年間スケジュールを開く';
+            menu.appendChild(all);
+
+            wrap.classList.remove('hidden');
+        }
+
+        document.querySelector('#next-schedule .ns-more')?.addEventListener('click', (event) => {
+            const menu = document.getElementById('next-schedule-menu');
+            const open = menu.classList.contains('hidden');
+            menu.classList.toggle('hidden', !open);
+            event.currentTarget.setAttribute('aria-expanded', String(open));
+            // キーボードで開いたときは、一覧の最初へ
+            if (open && event.detail === 0) menu.querySelector('a')?.focus();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('#next-schedule')) closeNextMenu();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            const menu = document.getElementById('next-schedule-menu');
+            if (event.key === 'Escape' && menu && !menu.classList.contains('hidden')) {
+                closeNextMenu();
+                document.querySelector('#next-schedule .ns-more')?.focus();
+            }
+        });
+
+        // 日付が変わっても古い「あと何日」のままにならないよう、画面に戻ったときに選び直す
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') renderNextSchedule();
         });
 
         function showLoggedOutState() {
             resetLoginButton();
-            hideNextSchedule();
+            stopNextSchedule();
             document.getElementById('user-info')?.classList.remove('show');
             document.getElementById('apps-grid')?.classList.add('hidden');
 
