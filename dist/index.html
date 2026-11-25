@@ -223,6 +223,15 @@
             background: #fff;
             box-shadow: 0 18px 40px rgba(30, 27, 75, 0.25);
             z-index: 1000;
+            max-height: min(60vh, 440px);
+            overflow-y: auto;
+        }
+
+        .ns-menu .nm-head {
+            padding: 6px 10px 4px;
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-weight: 700;
         }
 
         .ns-menu .nm-item {
@@ -2127,7 +2136,7 @@
 
         // ヘッダーの「次の予定」：年間スケジュール（schedule_plans・schedule_progress）から選んで出す。
         // Firestore の変更を見張っているので、年間スケジュールで「済」にすると、その場で次の予定に替わる。
-        const NEXT_MENU_LIMIT = 5;
+        const NEXT_WINDOW_DAYS = 14; // 「ほかN件」の一覧に出すのは、今日から2週間先までに始まる予定
         const nextSchedule = { plans: null, progress: null, stop: [] };
 
         function closeNextMenu() {
@@ -2185,18 +2194,22 @@
             main.title = `${first.plan}：${first.title}（${first.when}）`;
             main.setAttribute('aria-label', `次の予定 ${first.when} ${first.title} ${first.badge}`);
 
-            // 同じ週（いちばん近い予定から7日の間）にあるほかの予定の数
-            const others = items.slice(1).filter((it) => it.days - first.days <= 6).length;
+            // ほかの予定：ヘッダーに出した1件を除いて、今日から2週間先までに始まるもの。
+            // 「ほかN件」の N と、押して開く一覧の件数は同じになる
+            const others = items.slice(1).filter((it) => it.days <= NEXT_WINDOW_DAYS);
             const more = wrap.querySelector('.ns-more');
-            more.innerHTML = `ほか${others}件 <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>`;
-            more.setAttribute('aria-label', `同じ週のほかの予定 ${others}件。近い予定の一覧を開く`);
-            more.classList.toggle('hidden', others === 0);
-            if (!others) closeNextMenu();
+            more.innerHTML = `ほか${others.length}件 <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>`;
+            more.setAttribute('aria-label', `2週間以内のほかの予定 ${others.length}件の一覧を開く`);
+            more.classList.toggle('hidden', others.length === 0);
+            if (!others.length) closeNextMenu();
 
-            // 「ほかN件」を押すと開く一覧：近い予定を5件まで
             const menu = document.getElementById('next-schedule-menu');
             menu.innerHTML = '';
-            items.slice(0, NEXT_MENU_LIMIT).forEach((it) => {
+            const head = document.createElement('div');
+            head.className = 'nm-head';
+            head.textContent = '2週間以内のほかの予定';
+            menu.appendChild(head);
+            others.forEach((it) => {
                 const a = document.createElement('a');
                 a.className = 'nm-item';
                 a.href = window.ScheduleNext.linkTo(it);
