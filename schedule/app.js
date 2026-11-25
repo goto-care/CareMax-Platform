@@ -220,11 +220,22 @@
     };
   }
 
+  // TOPページの「次の予定」から来たとき（#task=年/スケジュール/区分/工程）は、その工程を開く
+  var pendingJump = (function () {
+    var m = /^#task=(\d{4})\/([^\/]+)\/([^\/]+)\/([^\/]+)$/.exec(location.hash);
+    if (!m) return null;
+    try { return { y: +m[1], pid: decodeURIComponent(m[2]), gid: decodeURIComponent(m[3]), tid: decodeURIComponent(m[4]) }; } catch (e) { return null; }
+  })();
   function onDocs(docs, fromCache) {
     state.docs = docs.map(function (d) { return { id: d.id, data: normDoc(d.data) }; });
     state.loaded = true;
     if (!fromCache) { clearTimeout(slowTimer); state.slow = false; }
     render();
+    if (pendingJump && findDoc(pendingJump.pid)) {
+      var j = pendingJump; pendingJump = null;
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+      jumpTo(j.y, j.pid, j.gid, j.tid);
+    }
   }
   var slowTimer = null;
   function subscribe() {

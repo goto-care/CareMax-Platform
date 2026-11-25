@@ -53,7 +53,8 @@
             background: linear-gradient(105deg, #2563eb 0%, #7c3aed 52%, #db6bdc 100%);
             box-shadow: 0 18px 48px rgba(56, 76, 184, 0.24);
             display: grid;
-            grid-template-columns: minmax(280px, 1fr) auto;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            column-gap: 24px;
             min-height: 92px;
             padding: 20px 40px;
             text-align: left;
@@ -118,7 +119,7 @@
             display: none;
             align-items: center;
             gap: 12px;
-            grid-column: 2;
+            grid-column: 3;
             grid-row: 1;
             justify-self: end;
             background: rgba(255, 255, 255, 0.18);
@@ -135,9 +136,78 @@
 
         #loading,
         .login-actions {
-            grid-column: 2;
+            grid-column: 3;
             grid-row: 1;
             justify-self: end;
+        }
+
+        /* ヘッダーの真ん中：年間スケジュール（Kaientai-Y）の次の予定 */
+        .next-schedule {
+            grid-column: 2;
+            grid-row: 1;
+            justify-self: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 100%;
+            min-width: 0;
+            padding: 8px 10px 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #3c3489;
+            font-size: 0.95rem;
+            text-decoration: none;
+            box-shadow: 0 6px 18px rgba(30, 27, 75, 0.18);
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+        }
+
+        /* 幅が足りないときは、次の予定をロゴの下の行に出す */
+        @media (max-width: 1100px) {
+            .login-container {
+                row-gap: 12px;
+            }
+
+            .next-schedule {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                justify-self: start;
+            }
+        }
+
+        .next-schedule:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(30, 27, 75, 0.24);
+        }
+
+        .next-schedule .ns-icon {
+            color: #7c3aed;
+            flex-shrink: 0;
+        }
+
+        .next-schedule .ns-when {
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .next-schedule .ns-title {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0;
+        }
+
+        .next-schedule .ns-badge {
+            flex-shrink: 0;
+            white-space: nowrap;
+            padding: 2px 10px;
+            border-radius: 999px;
+            background: #ede9fe;
+            color: #5b21b6;
+            font-size: 0.8rem;
+            font-weight: 700;
         }
 
         /* ログインのボタンの置き場所（右上。スマホではロゴの下） */
@@ -799,20 +869,37 @@
             }
 
             .login-container {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr) auto;
                 gap: 14px;
                 padding: 22px 18px;
             }
 
             #loading,
             .login-actions {
-                grid-column: 1;
-                grid-row: auto;
+                grid-column: 1 / -1;
+                grid-row: 2;
                 justify-self: start;
             }
 
             .login-actions {
                 justify-content: flex-start;
+            }
+
+            /* スマホ：ロゴの右にアイコンとログアウトだけ、次の予定はその下の行 */
+            .user-info {
+                grid-column: 2;
+                padding: 8px 10px;
+            }
+
+            #user-name {
+                display: none;
+            }
+
+            .next-schedule {
+                grid-column: 1 / -1;
+                grid-row: 2;
+                justify-self: stretch;
+                font-size: 0.9rem;
             }
 
             .logo-large {
@@ -1463,6 +1550,14 @@
         <h1 class="logo-large" id="platform-logo"><i class="fa-solid fa-cubes"></i> CareMax Platform</h1>
         <p class="tagline">業務管理を、もっとスマートに。</p>
 
+        <!-- 年間スケジュール（Kaientai-Y）の次の予定。ログイン後に schedule/next.js で選んで出す -->
+        <a id="next-schedule" class="next-schedule hidden" href="schedule/index.html">
+            <i class="fa-regular fa-calendar ns-icon" aria-hidden="true"></i>
+            <span class="ns-when"></span>
+            <span class="ns-title"></span>
+            <span class="ns-badge"></span>
+        </a>
+
         <div id="loading" class="loading">読み込み中...</div>
 
         <div class="login-actions">
@@ -1766,6 +1861,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="schedule/next.js?v=20261125"></script>
 
     <script>
         // Firebase Configuration
@@ -1888,10 +1984,55 @@
 
             // Update notification badges
             updateNotificationBadges();
+
+            loadNextSchedule();
         }
+
+        // ヘッダーの「次の予定」：年間スケジュール（schedule_plans・schedule_progress）から1件選んで出す
+        let nextScheduleLoadedAt = 0;
+
+        function hideNextSchedule() {
+            document.getElementById('next-schedule')?.classList.add('hidden');
+        }
+
+        function loadNextSchedule() {
+            const el = document.getElementById('next-schedule');
+            if (!el || !window.ScheduleNext || !auth.currentUser) return;
+            nextScheduleLoadedAt = Date.now();
+            const pack = (snap) => snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+            Promise.all([
+                db.collection('schedule_plans').get(),
+                db.collection('schedule_progress').get()
+            ]).then(([plans, progress]) => {
+                if (!auth.currentUser) return;
+                const item = window.ScheduleNext.findNext(pack(plans), pack(progress));
+                if (!item) {
+                    hideNextSchedule();
+                    return;
+                }
+                el.querySelector('.ns-when').textContent = item.when;
+                el.querySelector('.ns-title').textContent = item.title;
+                el.querySelector('.ns-badge').textContent = item.badge;
+                el.href = window.ScheduleNext.linkTo(item);
+                el.title = `${item.plan}：${item.title}（${item.when}）`;
+                el.setAttribute('aria-label', `次の予定 ${item.when} ${item.title} ${item.badge}`);
+                el.classList.remove('hidden');
+            }).catch((error) => {
+                console.warn('Next schedule unavailable:', error);
+                hideNextSchedule();
+            });
+        }
+
+        // 開いたままの日が続いても古くならないよう、画面に戻ったときに読み直す（10分に1回まで）
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && auth.currentUser && Date.now() - nextScheduleLoadedAt > 10 * 60 * 1000) {
+                loadNextSchedule();
+            }
+        });
 
         function showLoggedOutState() {
             resetLoginButton();
+            hideNextSchedule();
             document.getElementById('user-info')?.classList.remove('show');
             document.getElementById('apps-grid')?.classList.add('hidden');
 
