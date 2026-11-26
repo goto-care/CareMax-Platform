@@ -42,18 +42,24 @@
   </section>
 
   <section class="panel" aria-label="年間スケジュール">
-    <div class="panel-head">
-      <div class="years" id="years" aria-label="年の切り替え"></div>
-      <div class="actions" id="actions"></div>
-    </div>
-    <div class="legend" aria-label="凡例">
-      <span><i class="lg-bar"></i>期間</span>
-      <span><i class="lg-dot"></i>時期</span>
-      <span><i class="lg-dia"></i>締切（〜まで）</span>
-      <span><i class="lg-prev"></i>前の年からのつづき</span>
-      <span><i class="lg-today"></i>今日</span>
-    </div>
     <div class="notice" id="notice" hidden></div>
+    <!-- 年の切り替え・凡例・月の見出しは、下へスクロールしても画面の上に残る -->
+    <div class="stick" id="stick">
+      <div class="panel-head">
+        <div class="years" id="years" aria-label="年の切り替え"></div>
+        <div class="legend" aria-label="凡例">
+          <span><i class="lg-bar"></i>期間</span>
+          <span><i class="lg-dot"></i>時期</span>
+          <span><i class="lg-dia"></i>締切（〜まで）</span>
+          <span><i class="lg-prev"></i>前の年からのつづき</span>
+          <span><i class="lg-today"></i>今日</span>
+        </div>
+        <div class="actions" id="actions"></div>
+      </div>
+      <div class="sched-head-scroll" id="sched-head-scroll">
+        <div class="sched sched-head" id="sched-head"></div>
+      </div>
+    </div>
     <div class="sched-scroll" id="sched-scroll">
       <div class="sched" id="sched"></div>
     </div>

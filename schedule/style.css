@@ -115,9 +115,17 @@ button { font: inherit; color: inherit; }
 .icon-btn svg { width: 14px; height: 14px; display: block; }
 
 /* ---------- schedule panel ---------- */
-.panel { background: var(--surface); border-radius: 30px; padding: 22px 0 10px; box-shadow: var(--shadow); min-width: 0; overflow: hidden; }
-.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 0 26px 14px; }
-.years { display: flex; flex-wrap: wrap; gap: 8px; }
+/* overflow: clip（hidden ではない）にすると、中の .stick が画面の上に残れる */
+.panel { background: var(--surface); border-radius: 30px; padding: 14px 0 10px; box-shadow: var(--shadow); min-width: 0; overflow: clip; }
+/* 年・凡例・ボタン・月の見出し。下へスクロールしても画面の上に残る。狭い画面では上の部分（--stick-away）だけ流れる */
+.stick { position: sticky; top: calc(-1 * var(--stick-away, 0px)); z-index: 6; background: var(--surface); padding-top: 8px; transition: box-shadow 0.15s; }
+.stick.is-stuck { box-shadow: 0 12px 20px -14px rgba(28, 50, 130, 0.45); }
+/* 年・凡例・ボタンを1行に並べて、上に残る枠を低くする */
+.panel-head {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "years legend actions";
+  align-items: center; gap: 8px 22px; padding: 0 26px 12px;
+}
+.years { grid-area: years; display: flex; flex-wrap: wrap; gap: 8px; }
 .ychip {
   border: 0; background: var(--surface-2); color: var(--muted); border-radius: 999px;
   padding: 7px 18px; font-family: var(--font-display); font-weight: 700; font-size: 15px; cursor: pointer; font-variant-numeric: tabular-nums;
@@ -126,16 +134,20 @@ button { font: inherit; color: inherit; }
 .ychip[aria-pressed="true"] { background: var(--grad-accent); color: var(--on-accent); box-shadow: 0 10px 22px -8px var(--accent); }
 .ychip.is-empty:not([aria-pressed="true"]) { background: transparent; box-shadow: inset 0 0 0 1px var(--line-strong); font-weight: 500; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); align-items: center; padding: 0 26px 14px; }
+.panel-head .actions { grid-area: actions; justify-content: flex-end; }
+.legend { grid-area: legend; display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted); align-items: center; line-height: 1.5; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .lg-bar { width: 22px; height: 10px; border-radius: 5px; display: inline-block; background: var(--muted); }
 .lg-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--muted); }
 .lg-dia { width: 10px; height: 10px; transform: rotate(45deg); display: inline-block; border-radius: 2px; background: var(--muted); }
 .lg-prev { width: 22px; height: 10px; border-radius: 5px; display: inline-block; border: 1px dashed var(--muted); }
 .lg-today { width: 2px; height: 14px; background: var(--today); display: inline-block; border-radius: 2px; }
-.notice { margin: 0 26px 14px; padding: 9px 14px; border-radius: 14px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
+.notice { margin: 6px 26px 6px; padding: 9px 14px; border-radius: 14px; background: var(--surface-2); font-size: 13px; color: var(--muted); }
 
 .sched-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
+/* 月の見出しの枠。表（.sched-scroll）と同じだけ横にずらす。スクロールバーは表の側だけに出す */
+.sched-head-scroll { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.sched-head-scroll::-webkit-scrollbar { display: none; }
 .sched { --cols: 12; min-width: calc(var(--label-w) + var(--cols) * var(--col-min)); font-size: 13px; }
 .sched.is-empty { min-width: 0; }
 .row { display: grid; grid-template-columns: var(--label-w) minmax(0, 1fr); border-top: 1px solid var(--line); }
@@ -339,11 +351,17 @@ button.t-no:hover { box-shadow: inset 0 0 0 2px var(--k); }
 
 .foot { color: var(--on-page-muted); font-size: 12px; display: grid; gap: 4px; }
 
+/* 1行に入らない幅：年とボタンを上の行、凡例をその下の行に */
+@media (max-width: 1100px) {
+  .panel-head { grid-template-columns: auto auto; grid-template-areas: "years actions" "legend legend"; justify-content: space-between; }
+}
 @media (max-width: 760px) {
   :root { --label-w: 176px; --col-min: 52px; }
   .now { grid-template-columns: 1fr; }
   .panel { border-radius: 26px; }
-  .panel-head, .legend { padding-inline: 16px; }
+  /* スマホ：ボタンと凡例を上に置いて、スクロールしたら流す。残るのは年と月の見出しだけ */
+  .panel-head { grid-template-columns: minmax(0, 1fr); grid-template-areas: "actions" "legend" "years"; justify-content: stretch; padding-inline: 16px; padding-bottom: 10px; }
+  .panel-head .actions { justify-content: flex-start; }
   .notice { margin-inline: 16px; }
   .label { padding-left: 14px; padding-right: 8px; }
   .row.group .label, .row.task .label, .row.addrow .label { padding-left: 12px; }

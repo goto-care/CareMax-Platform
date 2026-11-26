@@ -30,8 +30,15 @@
   // ===== 状態 =====
   var state = { docs: [], loaded: false, error: null, slow: false, local: false, canWrite: true, year: T.y, open: {}, openTask: {}, prog: {}, progDead: false };
   var store = null;
-  try { state.open = JSON.parse(localStorage.getItem('sched-open-v2') || '{}') || {}; } catch (e) { state.open = {}; }
-  function saveOpen() { try { localStorage.setItem('sched-open-v2', JSON.stringify(state.open)); } catch (e) {} }
+  // 開いているスケジュール・作業は、年ごとに分けて覚える（2027年で開いても、ほかの年は閉じたまま）。キーは「年:スケジュールのid」
+  try { state.open = JSON.parse(localStorage.getItem('sched-open-v3') || '{}') || {}; } catch (e) { state.open = {}; }
+  try { localStorage.removeItem('sched-open-v2'); } catch (e) {} // 年で分けていなかったころの記録
+  function saveOpen() { try { localStorage.setItem('sched-open-v3', JSON.stringify(state.open)); } catch (e) {} }
+  function openKey(y, pid) { return y + ':' + pid; }
+  function isOpen(y, pid) { return !!state.open[openKey(y, pid)]; }
+  function setOpen(y, pid, on) { if (on) state.open[openKey(y, pid)] = true; else delete state.open[openKey(y, pid)]; saveOpen(); }
+  function forgetOpen(pid) { Object.keys(state.open).forEach(function (k) { if (k.slice(k.indexOf(':') + 1) === pid) delete state.open[k]; }); saveOpen(); }
+  function openTaskKey(y, pid, gid, tid) { return y + ':' + taskKey(pid, gid, tid); }
 
   // ===== 小道具 =====
   function esc(s) {
@@ -332,7 +339,7 @@
     state.prog = m;
     if (state.loaded) keepScroll(render);
   }
-  function keepScroll(fn) { var sc = $('sched-scroll'), left = sc.scrollLeft; fn(); sc.scrollLeft = left; }
+  function keepScroll(fn) { var sc = $('sched-scroll'), left = sc.scrollLeft; fn(); sc.scrollLeft = left; syncHead(); }
 
   var toastTimer = null;
   function toast(msg, isError) {
@@ -343,7 +350,7 @@
   }
 
   // ===== 画面を描く =====
-  function render() { renderYears(); renderActions(); renderNotice(); renderSched(); renderNow(); }
+  function render() { renderYears(); renderActions(); renderNotice(); renderSched(); renderNow(); measureStick(); }
 
   function renderYears() {
     $('years').innerHTML = chipYears().map(function (y) {
@@ -396,7 +403,8 @@
   function fmtDate(iso) { var t = new Date(iso); return isNaN(t.getTime()) ? '' : (t.getMonth() + 1) + '/' + t.getDate(); }
 
   function renderSched() {
-    var el = $('sched'), hint = $('hint'), y = state.year;
+    var el = $('sched'), hint = $('hint'), y = state.year, headEl = $('sched-head');
+    headEl.innerHTML = ''; $('sched-head-scroll').hidden = true;
     if (!state.loaded) { el.className = 'sched is-empty'; el.innerHTML = '<div class="empty"><p>読み込み中…</p></div>'; hint.textContent = ''; return; }
     var list = yearDocs(y);
     if (!list.length) {
@@ -427,12 +435,14 @@
     var colPx = Math.max(($('sched-scroll').clientWidth || 1100) - labelW, cols * colMin) / cols;
     var canCheck = state.canWrite && !state.progDead && !state.error;
 
-    var html = '<div class="row head-row"><div class="label">スケジュール・作業</div><div class="months">';
+    // 月の見出しは、画面の上に残る枠（#sched-head）に別に描く。横のずれは syncHead で表と合わせる
+    var headHtml = '<div class="row head-row"><div class="label">スケジュール・作業</div><div class="months">';
     for (var c = 0; c < cols; c++) {
-      html += '<div class="' + (c === nowCol ? 'now' : '') + (c === 12 ? ' next-year' : '') + '">' + (c % 12 + 1) + '月<small>' +
+      headHtml += '<div class="' + (c === nowCol ? 'now' : '') + (c === 12 ? ' next-year' : '') + '">' + (c % 12 + 1) + '月<small>' +
         (c === 0 ? y + '年' : (c === 12 ? '翌年' : '&nbsp;')) + '</small></div>';
     }
-    html += '</div></div>';
+    headHtml += '</div></div>';
+    var html = '';
 
     function outLabel(s, e, text, color) {
       return e / cols > 0.78
@@ -442,7 +452,7 @@
 
     var anyOpen = false;
     list.forEach(function (d, pi) {
-      var p = d.data, open = !!state.open[d.id], dots = p.view === 'dots', unit = dots ? '件' : '工程';
+      var p = d.data, open = isOpen(y, d.id), dots = p.view === 'dots', unit = dots ? '件' : '工程';
       if (open) anyOpen = true;
       var bars = '', hasBar = false;
       p.groups.forEach(function (g) {
@@ -504,7 +514,7 @@
             (sp && !dots ? '<span class="gbar" style="left:' + pct(sp[0], cols) + ';width:' + pct(Math.min(Math.max(sp[1] - sp[0], 0.3), cols - sp[0]), cols) + '"></span>' : '') + '</div></div>';
         }
         g.tasks.forEach(function (t, ti) {
-          var key = taskKey(d.id, g.id, t.id), topen = !!state.openTask[key], did = 'd-' + pi + '-' + gi + '-' + ti;
+          var topen = !!state.openTask[openTaskKey(y, d.id, g.id, t.id)], did = 'd-' + pi + '-' + gi + '-' + ti;
           var done = isDone(y, d, g, t), at = doneAt(y, d, g, t), memo = memoOf(y, d, g, t);
           var ids = ' data-pid="' + esc(d.id) + '" data-gid="' + esc(g.id) + '" data-tid="' + esc(t.id) + '"';
           var meta = (t.party ? '<span class="party ' + partyClass(t.party) + '">' + esc(t.party) + '</span>' : '') +
@@ -546,6 +556,10 @@
     el.className = 'sched';
     el.style.setProperty('--cols', cols);
     el.innerHTML = html;
+    headEl.style.setProperty('--cols', cols);
+    headEl.innerHTML = headHtml;
+    $('sched-head-scroll').hidden = false;
+    syncHead();
     hint.textContent = anyOpen
       ? '作業を押すと「やること」と備考が開きます。' + (canCheck ? '番号の丸を押すと、その年の「済」が付きます。' : '') + 'スケジュール名をもう一度押すと閉じます。'
       : 'スケジュールのバーを押すと、中の作業が開きます。';
@@ -593,9 +607,39 @@
 
   // 詳細の幅を、見えている幅に合わせる（横にずらしても読めるように）
   function fitDetail() { var sc = $('sched-scroll'); sc.style.setProperty('--vw', sc.clientWidth + 'px'); }
+
+  // ===== 画面の上に残る枠（年・凡例・月の見出し） =====
+  // 月の見出しは表とは別の枠にあるので、表を横にずらしたら見出しも同じだけずらす（見出しの側でずらしても表が付いてくる）
+  function syncHead() { var hs = $('sched-head-scroll'), sc = $('sched-scroll'); if (hs.scrollLeft !== sc.scrollLeft) hs.scrollLeft = sc.scrollLeft; }
+  $('sched-scroll').addEventListener('scroll', syncHead, { passive: true });
+  $('sched-head-scroll').addEventListener('scroll', function () {
+    var hs = $('sched-head-scroll'), sc = $('sched-scroll');
+    if (sc.scrollLeft !== hs.scrollLeft) sc.scrollLeft = hs.scrollLeft;
+  }, { passive: true });
+  // 狭い画面では、枠の上の部分（ボタン・凡例）は流れて、年と月の見出しだけが残る。その流れる高さを測る
+  var stickAway = 0;
+  function measureStick() {
+    var st = $('stick'), yr = $('years');
+    stickAway = Math.max(0, yr.offsetTop - 8);
+    st.style.setProperty('--stick-away', stickAway + 'px');
+    // ジャンプやフォーカスで行が見出しの下に隠れないように
+    document.documentElement.style.scrollPaddingTop = Math.max(0, st.offsetHeight - stickAway) + 8 + 'px';
+    markStuck();
+  }
+  if (window.ResizeObserver) new ResizeObserver(function () { measureStick(); }).observe($('stick')); // 文字の読み込み・折り返しで高さが変わったとき
+  // 上に残っている間だけ、枠の下に影を付ける
+  function markStuck() { var st = $('stick'); st.classList.toggle('is-stuck', st.getBoundingClientRect().top <= 0.5 - stickAway); }
+  var stuckQueued = false;
+  window.addEventListener('scroll', function () {
+    if (stuckQueued) return;
+    stuckQueued = true;
+    requestAnimationFrame(function () { stuckQueued = false; markStuck(); });
+  }, { passive: true });
+
   var resizeTimer = null;
   window.addEventListener('resize', function () {
     fitDetail();
+    measureStick();
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () { if (state.loaded) keepScroll(renderSched); }, 150); // 幅が変わったら、バーの文字の出し方を決め直す
   });
@@ -643,17 +687,17 @@
     if (row && row.closest('#sched')) {
       if (row.classList.contains('l1')) {
         var pid = row.getAttribute('data-pid');
-        state.open[pid] = !state.open[pid]; saveOpen();
+        setOpen(state.year, pid, !isOpen(state.year, pid));
       } else {
-        var key = taskKey(row.getAttribute('data-pid'), row.getAttribute('data-gid'), row.getAttribute('data-tid'));
-        state.openTask[key] = !state.openTask[key];
+        var key = openTaskKey(state.year, row.getAttribute('data-pid'), row.getAttribute('data-gid'), row.getAttribute('data-tid'));
+        if (state.openTask[key]) delete state.openTask[key]; else state.openTask[key] = true;
       }
       keepScroll(renderSched);
     }
   });
 
   function jumpTo(y, pid, gid, tid) {
-    state.year = y; state.open[pid] = true; state.openTask[taskKey(pid, gid, tid)] = true; saveOpen();
+    state.year = y; state.openTask[openTaskKey(y, pid, gid, tid)] = true; setOpen(y, pid, true);
     render();
     var rows = document.querySelectorAll('#sched .row.task');
     for (var i = 0; i < rows.length; i++) {
@@ -758,7 +802,7 @@
       var id = newId('p');
       if (!alive.length) alive = [{ id: newId('g'), name: '', color: 'green' }];
       var maxOrder = 0; yearDocs(state.year).forEach(function (d) { maxOrder = Math.max(maxOrder, d.data.order); });
-      state.open[id] = true; saveOpen();
+      setOpen(state.year, id, true);
       report(putDoc(id, { year: state.year, series: id, name: name, sub: w.sub.trim(), order: maxOrder + 1, repeat: !!w.repeat, until: 0, view: w.view,
         groups: alive.map(function (g) { return { id: g.id, name: g.name.trim(), color: g.color, tasks: [] }; }) }),
         '「' + name + '」を' + (w.repeat ? '毎年のスケジュールとして' : state.year + '年だけのスケジュールとして') + '追加しました');
@@ -873,7 +917,7 @@
       todo: w.todo.split('\n').map(function (s) { return s.replace(/^[\s・]+/, '').trim(); }).filter(Boolean),
       marks: w.marks.map(finishMark) };
     closeDialog();
-    state.openTask[taskKey(w.pid, w.gid, task.id)] = true;
+    state.openTask[openTaskKey(state.year, w.pid, w.gid, task.id)] = true;
     report(mutate(w.pid, function (data) {
       // 元の区分の中からだけ取りのぞく（ほかの区分の作業には触れない）
       if (w.tid) data.groups.forEach(function (g) { if (g.id === w.origGid) g.tasks = g.tasks.filter(function (t) { return t.id !== w.tid; }); });
@@ -1202,7 +1246,7 @@
     if (act === 'del-no') { W.confirmDel = false; redraw(); return; }
     if (act === 'del-yes') {
       var w = W; closeDialog();
-      if (w.kind === 'project') { delete state.open[w.pid]; saveOpen(); report(removeDoc(w.pid), '削除しました'); }
+      if (w.kind === 'project') { forgetOpen(w.pid); report(removeDoc(w.pid), '削除しました'); }
       else report(mutate(w.pid, function (data) { data.groups.forEach(function (g) { if (g.id === w.origGid) g.tasks = g.tasks.filter(function (t) { return t.id !== w.tid; }); }); }), '削除しました');
       return;
     }
@@ -1221,7 +1265,7 @@
       if (!src) return;
       var copy = clone(src.data), nid = newId('p');
       copy.repeat = false; copy.until = 0; copy.year = wo.viewYear; copy.series = seriesOf(src);
-      if (state.open[wo.pid]) { state.open[nid] = true; saveOpen(); }
+      if (isOpen(wo.viewYear, wo.pid)) setOpen(wo.viewYear, nid, true);
       report(putDoc(nid, copy), wo.viewYear + '年だけの内容を作りました。この年の分だけ直せます');
       return;
     }
