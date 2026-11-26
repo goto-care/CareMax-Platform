@@ -779,10 +779,6 @@
             display: block;
         }
 
-        .app-icon.catalog {
-            background: linear-gradient(135deg, #ff9f43, #f97316);
-        }
-
         .app-icon.jijogu {
             background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fcd34d 100%);
         }
@@ -1730,12 +1726,6 @@
             <p class="app-desc">オフィス備品の発注依頼と在庫管理を効率的に行えます。</p>
         </a>
 
-        <a href="catalog/index.html" class="app-card">
-            <div class="app-icon catalog"><i class="fa-solid fa-chart-line"></i></div>
-            <h2 class="app-title">カタログ収支管理</h2>
-            <p class="app-desc">収入・支出を記録し、収支バランスを可視化します。</p>
-        </a>
-
         <a href="jijogu/index.html" class="app-card">
             <div class="app-icon jijogu">
                 <img src="jijogu/jijogu-icon.svg" alt="" width="72" height="72">
@@ -2356,7 +2346,6 @@
                 const normalizedHref = href.toLowerCase();
                 if (kaientaiId) return kaientaiId;
                 if (normalizedHref.includes('supply/')) return 'supply';
-                if (normalizedHref.includes('catalog/')) return 'catalog';
                 if (normalizedHref.includes('jijogu/')) return 'jijogu';
                 if (normalizedHref.includes('exhibit/')) return 'exhibit';
                 if (normalizedHref.includes('tasking-caremax')) return 'tasking';
@@ -2366,7 +2355,7 @@
             function getCardGroups(title, href) {
                 const groups = [];
                 if (getKaientaiLetter(title)) groups.push('kaientai');
-                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
+                if (href.includes('supply/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
                 return Array.from(new Set(groups.length ? groups : ['management']));
             }
 
@@ -2742,7 +2731,6 @@
                 const normalizedHref = href.toLowerCase();
                 if (kaientaiId) return kaientaiId;
                 if (normalizedHref.includes('supply/')) return 'supply';
-                if (normalizedHref.includes('catalog/')) return 'catalog';
                 if (normalizedHref.includes('jijogu/')) return 'jijogu';
                 if (normalizedHref.includes('exhibit/')) return 'exhibit';
                 if (normalizedHref.includes('tasking-caremax')) return 'tasking';
@@ -2752,7 +2740,7 @@
             function getCardGroups(title, href) {
                 const groups = [];
                 if (getKaientaiLetter(title)) groups.push('kaientai');
-                if (href.includes('supply/') || href.includes('catalog/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
+                if (href.includes('supply/') || href.includes('jijogu/') || href.includes('exhibit/')) groups.push('management');
                 return Array.from(new Set(groups.length ? groups : ['management']));
             }
 
